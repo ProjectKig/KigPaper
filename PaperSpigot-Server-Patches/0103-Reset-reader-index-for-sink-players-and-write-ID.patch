@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Tue, 31 Aug 2021 02:13:10 +0200
+Subject: [PATCH] Reset reader index for sink players and write ID
+
+
+diff --git a/src/main/java/dev/rocco/kig/paper/impl/cheetah/SinkPlayerConnection.java b/src/main/java/dev/rocco/kig/paper/impl/cheetah/SinkPlayerConnection.java
+index f8992b9c733c55b3f292882287436f08dac59a6f..a84632760564ffaaab09a6df7d6dd4c37ca19470 100644
+--- a/src/main/java/dev/rocco/kig/paper/impl/cheetah/SinkPlayerConnection.java
++++ b/src/main/java/dev/rocco/kig/paper/impl/cheetah/SinkPlayerConnection.java
+@@ -16,11 +16,15 @@ public class SinkPlayerConnection extends PlayerConnection {
+     public void sendPacket(Packet packet) {
+         // Don't send packet to non existing connection, instead serialize it in place and invoke the callback.
+         ByteBuf direct = Unpooled.directBuffer(), withLength = null;
++        Integer id = EnumProtocol.PLAY.a(EnumProtocolDirection.CLIENTBOUND, packet);
++        if (id == null) return;
+         try {
+             PacketDataSerializer serializer = new PacketDataSerializer(direct);
++            serializer.b(id); // write packet ID
+             packet.b(serializer);
+             // Prepend packet length
+             withLength = Unpooled.directBuffer();
++            withLength.markReaderIndex();
+             int packetSize = direct.readableBytes();
+             int packetSizeVarInt = PacketDataSerializer.a(packetSize);
+             if (packetSizeVarInt > 3) {
+@@ -31,6 +35,7 @@ public class SinkPlayerConnection extends PlayerConnection {
+                 newSerializer.b(packetSize);
+                 newSerializer.writeBytes(direct, direct.readerIndex(), packetSize);
+             }
++            withLength.resetReaderIndex();
+             ((SinkEntityPlayer) player).getPacketConsumer().accept(withLength.nioBuffer());
+         } catch (Exception ex) {
+             MinecraftServer.LOGGER.error("Error sending packet to sink entity", ex);

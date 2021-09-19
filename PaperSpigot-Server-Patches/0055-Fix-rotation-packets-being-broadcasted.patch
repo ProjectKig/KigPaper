@@ -1,0 +1,105 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Sat, 6 Mar 2021 16:08:47 +0100
+Subject: [PATCH] Fix rotation packets being broadcasted
+
+
+diff --git a/src/main/java/dev/rocco/kig/paper/impl/command/KigPaperCommand.java b/src/main/java/dev/rocco/kig/paper/impl/command/KigPaperCommand.java
+index 4ed6e000b926a555211de95dc843008dd23f1097..b82b7eb0d7dc94e48916f2f42c30983a9becde0f 100644
+--- a/src/main/java/dev/rocco/kig/paper/impl/command/KigPaperCommand.java
++++ b/src/main/java/dev/rocco/kig/paper/impl/command/KigPaperCommand.java
+@@ -1,6 +1,5 @@
+ package dev.rocco.kig.paper.impl.command;
+ 
+-import net.minecraft.server.NetworkManager;
+ import org.bukkit.command.Command;
+ import org.bukkit.command.CommandSender;
+ 
+@@ -12,13 +11,6 @@ public class KigPaperCommand extends Command {
+ 
+     @Override
+     public boolean execute(CommandSender sender, String commandLabel, String[] args) {
+-        if (!testPermission(sender)) return true;
+-        if(args.length > 0) {
+-            if("flush".equalsIgnoreCase(args[0])) {
+-                NetworkManager.EXPERIMENTAL_FORCE_CONDITIONAL_FLUSH = !NetworkManager.EXPERIMENTAL_FORCE_CONDITIONAL_FLUSH;
+-                sender.sendMessage("Experimental force conditional flush: " + NetworkManager.EXPERIMENTAL_FORCE_CONDITIONAL_FLUSH);
+-            }
+-        }
+         return true;
+     }
+ }
+diff --git a/src/main/java/net/minecraft/server/EntityTrackerEntry.java b/src/main/java/net/minecraft/server/EntityTrackerEntry.java
+index 1fc2388eaa178366b92e9f4e2d6b32ed8a83c0dc..da9de73719b260eafd33e021cd3bb1602efb171c 100644
+--- a/src/main/java/net/minecraft/server/EntityTrackerEntry.java
++++ b/src/main/java/net/minecraft/server/EntityTrackerEntry.java
+@@ -411,8 +411,13 @@ public class EntityTrackerEntry {
+                     }
+ 
+                     // CraftBukkit start - Fix for nonsensical head yaw
+-                    this.i = MathHelper.d(this.tracker.getHeadRotation() * 256.0F / 360.0F);
+-                    this.broadcast(new PacketPlayOutEntityHeadRotation(this.tracker, (byte) i));
++                    // KigPaper
++                    if (this.tracker instanceof EntityLiving) {
++                        this.i = MathHelper.d(this.tracker.getHeadRotation() * 256.0F / 360.0F);
++                        // CraftBukkit what the fuck were you thinking?
++                        //this.broadcast(new PacketPlayOutEntityHeadRotation(this.tracker, (byte) i)); // KigPaper
++                        entityplayer.playerConnection.sendPacket(new PacketPlayOutEntityHeadRotation(this.tracker, (byte) i));
++                    }
+                     // CraftBukkit end
+ 
+                     if (this.tracker instanceof EntityLiving) {
+@@ -430,7 +435,6 @@ public class EntityTrackerEntry {
+                 this.trackedPlayers.remove(entityplayer);
+                 entityplayer.d(this.tracker);
+             }
+-
+         }
+     }
+ 
+diff --git a/src/main/java/net/minecraft/server/NetworkManager.java b/src/main/java/net/minecraft/server/NetworkManager.java
+index ff6f0d73a5fadfaa03d1b9f306ac744023116d23..8938f206a33483725295fb45090e390f819d4a62 100644
+--- a/src/main/java/net/minecraft/server/NetworkManager.java
++++ b/src/main/java/net/minecraft/server/NetworkManager.java
+@@ -28,9 +28,9 @@ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ import org.apache.logging.log4j.Marker;
+ import org.apache.logging.log4j.MarkerManager;
++import org.github.paperspigot.PaperSpigotConfig;
+ 
+ public class NetworkManager extends SimpleChannelInboundHandler<Packet> {
+-    public static boolean EXPERIMENTAL_FORCE_CONDITIONAL_FLUSH = false;
+     private static final Logger g = LogManager.getLogger();
+     public static final Marker a = MarkerManager.getMarker("NETWORK");
+     public static final Marker b = MarkerManager.getMarker("NETWORK_PACKETS", NetworkManager.a);
+@@ -168,7 +168,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet> {
+     public void handle(Packet packet) {
+         if (this.g()) {
+             this.m();
+-            this.a(packet, (GenericFutureListener[]) null, !EXPERIMENTAL_FORCE_CONDITIONAL_FLUSH || this.canFlush /* KigPaper */);
++            this.a(packet, (GenericFutureListener[]) null, !PaperSpigotConfig.forceConditionalAutoFlush || this.canFlush /* KigPaper */);
+         } else {
+             this.j.writeLock().lock();
+ 
+diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+index ed68c5470acadcc87488e9d7582a3c62458763e6..0ed3fa49db23593f92bf7a6e7ed057e387306f6a 100644
+--- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
++++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+@@ -224,7 +224,7 @@ public class PaperSpigotConfig
+     }
+     // KigPaper start
+     public static float knockbackHorizontalMultiplier, knockbackVerticalMultiplier, knockbackHorizontalSprinting, knockbackVerticalSprinting, knockbackFriction;
+-    public static boolean betterVehicleHitboxes, nettyReadTimeout;
++    public static boolean betterVehicleHitboxes, nettyReadTimeout, forceConditionalAutoFlush;
+     private static void knockbackHorizontalMultiplier() {
+         knockbackHorizontalMultiplier = (float) getDouble("knockback.horizontal.normal", 1f);
+     }
+@@ -242,5 +242,8 @@ public class PaperSpigotConfig
+     }
+     private static void betterVehicleHitboxes() { betterVehicleHitboxes = getBoolean("better-vehicle-hitboxes", true); }
+     private static void nettyReadTimeout() { nettyReadTimeout = getBoolean("netty-read-timeout", true); }
++    private static void conditionalAutoFlush() {
++        forceConditionalAutoFlush = getBoolean("net-force-conditional-flush", true);
++    }
+     // KigPaper end
+ }

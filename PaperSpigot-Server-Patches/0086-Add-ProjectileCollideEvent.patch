@@ -1,0 +1,135 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Fri, 18 Jun 2021 22:57:46 +0200
+Subject: [PATCH] Add ProjectileCollideEvent
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityArrow.java b/src/main/java/net/minecraft/server/EntityArrow.java
+index 61b83390d542cd78b589a5017d8fdb9c55928bea..79b9d942c216bc9f545fa576202fb6e67cbf2aec 100644
+--- a/src/main/java/net/minecraft/server/EntityArrow.java
++++ b/src/main/java/net/minecraft/server/EntityArrow.java
+@@ -1,5 +1,6 @@
+ package net.minecraft.server;
+ 
++import dev.rocco.kig.paper.api.event.ProjectileCollideEvent;
+ import dev.rocco.kig.paper.api.particle.ProjectileEffect;
+ import org.bukkit.Location;
+ import org.bukkit.entity.LivingEntity;
+@@ -258,6 +259,13 @@ public class EntityArrow extends Entity implements IProjectile {
+             // KigPaper end
+             // PaperSpigot end
+ 
++            // KigPaper start
++            if (movingobjectposition != null && movingobjectposition.entity != null) {
++                ProjectileCollideEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileCollideEvent(this, movingobjectposition.entity);
++                if (event.isCancelled()) movingobjectposition = null;
++            }
++            // KigPaper end
++
+             if (movingobjectposition != null) {
+                 org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileHitEvent(this); // CraftBukkit - Call event
+                 if (movingobjectposition.entity != null) {
+diff --git a/src/main/java/net/minecraft/server/EntityFireball.java b/src/main/java/net/minecraft/server/EntityFireball.java
+index 125f74dfcbd525c014e152db432241aab299a0fb..7a6a0843d6f61331c44c08177f46a72e203e74e9 100644
+--- a/src/main/java/net/minecraft/server/EntityFireball.java
++++ b/src/main/java/net/minecraft/server/EntityFireball.java
+@@ -2,6 +2,7 @@ package net.minecraft.server;
+ 
+ import java.util.List;
+ 
++import dev.rocco.kig.paper.api.event.ProjectileCollideEvent;
+ import org.bukkit.craftbukkit.event.CraftEventFactory; // CraftBukkit
+ 
+ public abstract class EntityFireball extends Entity {
+@@ -126,6 +127,13 @@ public abstract class EntityFireball extends Entity {
+                 movingobjectposition = new MovingObjectPosition(entity);
+             }
+ 
++            // KigPaper start
++            if (movingobjectposition != null && movingobjectposition.entity != null) {
++                ProjectileCollideEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileCollideEvent(this, movingobjectposition.entity);
++                if (event.isCancelled()) movingobjectposition = null;
++            }
++            // KigPaper end
++
+             if (movingobjectposition != null) {
+                 this.a(movingobjectposition);
+ 
+diff --git a/src/main/java/net/minecraft/server/EntityFishingHook.java b/src/main/java/net/minecraft/server/EntityFishingHook.java
+index c9c89943682e21bf49770f3a432b1aad7baacff6..e5d2f80f63afed8566bbcabd2d1dabd03d4f0b27 100644
+--- a/src/main/java/net/minecraft/server/EntityFishingHook.java
++++ b/src/main/java/net/minecraft/server/EntityFishingHook.java
+@@ -1,5 +1,6 @@
+ package net.minecraft.server;
+ 
++import dev.rocco.kig.paper.api.event.ProjectileCollideEvent;
+ import dev.rocco.kig.paper.api.particle.ProjectileEffect;
+ import org.bukkit.Location;
+ import org.bukkit.entity.Fish;
+@@ -214,6 +215,13 @@ public class EntityFishingHook extends Entity {
+             // KigPaper end
+             // PaperSpigot end
+ 
++            // KigPaper start
++            if (movingobjectposition != null && movingobjectposition.entity != null) {
++                ProjectileCollideEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileCollideEvent(this, movingobjectposition.entity);
++                if (event.isCancelled()) movingobjectposition = null;
++            }
++            // KigPaper end
++
+             if (movingobjectposition != null) {
+                 org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileHitEvent(this); // Craftbukkit - Call event
+                 if (movingobjectposition.entity != null) {
+diff --git a/src/main/java/net/minecraft/server/EntityProjectile.java b/src/main/java/net/minecraft/server/EntityProjectile.java
+index eb8336e7665d38b61724388c4d3af3b1769b133e..793cd119187ef4551de3c4ea90f5e526ce1841a3 100644
+--- a/src/main/java/net/minecraft/server/EntityProjectile.java
++++ b/src/main/java/net/minecraft/server/EntityProjectile.java
+@@ -2,6 +2,7 @@ package net.minecraft.server;
+ 
+ // KigPaper start
+ 
++import dev.rocco.kig.paper.api.event.ProjectileCollideEvent;
+ import dev.rocco.kig.paper.api.particle.ProjectileEffect;
+ import org.bukkit.Location;
+ import org.bukkit.entity.Player;
+@@ -177,6 +178,13 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
+         // KigPaper end
+         // PaperSpigot end
+ 
++        // KigPaper start
++        if (movingobjectposition != null && movingobjectposition.entity != null) {
++            ProjectileCollideEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileCollideEvent(this, movingobjectposition.entity);
++            if (event.isCancelled()) movingobjectposition = null;
++        }
++        // KigPaper end
++
+         if (movingobjectposition != null) {
+             if (movingobjectposition.type == MovingObjectPosition.EnumMovingObjectType.BLOCK && this.world.getType(movingobjectposition.a()).getBlock() == Blocks.PORTAL) {
+                 this.d(movingobjectposition.a());
+diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+index 1f600a17f2d486fa389e227886c338cf4182981f..ff62ce02589b8d83a6d4f9f16df3a9f30728f08e 100644
+--- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
++++ b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+@@ -9,6 +9,7 @@ import java.util.Map;
+ import com.google.common.base.Function;
+ import com.google.common.base.Functions;
+ 
++import dev.rocco.kig.paper.api.event.ProjectileCollideEvent;
+ import net.minecraft.server.*;
+ 
+ import org.bukkit.Bukkit;
+@@ -764,6 +765,14 @@ public class CraftEventFactory {
+         return event;
+     }
+ 
++    // KigPaper start
++    public static ProjectileCollideEvent callProjectileCollideEvent(Entity entity, Entity collided) {
++        ProjectileCollideEvent event = new ProjectileCollideEvent((Projectile) entity.getBukkitEntity(), collided.getBukkitEntity());
++        entity.world.getServer().getPluginManager().callEvent(event);
++        return event;
++    }
++    // KigPaper end
++
+     public static ExpBottleEvent callExpBottleEvent(Entity entity, int exp) {
+         ThrownExpBottle bottle = (ThrownExpBottle) entity.getBukkitEntity();
+         ExpBottleEvent event = new ExpBottleEvent(bottle, exp);

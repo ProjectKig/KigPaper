@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Wed, 10 Mar 2021 14:17:01 +0100
+Subject: [PATCH] Add World getEntityById API
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+index 86e842e9ce705301d83d0d422fb9f856c494e835..b850e02a5feab2f99b96cf6424864fc98bfa8f20 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+@@ -380,6 +380,12 @@ public class CraftWorld implements World {
+         }
+         return list;
+     }
++
++    @Override
++    public Entity getEntityById(int id) {
++        net.minecraft.server.Entity entity = getHandle().a(id);
++        return entity == null ? null : entity.getBukkitEntity();
++    }
+     // KigPaper end
+ 
+     private static void randomLocationWithinBlock(Location loc, double xs, double ys, double zs) {

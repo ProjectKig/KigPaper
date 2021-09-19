@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <roccodev.business@gmail.com>
+Date: Mon, 21 Sep 2020 13:51:05 +0200
+Subject: [PATCH] Update POM with my repos
+
+
+diff --git a/pom.xml b/pom.xml
+index fe9d6d265b686ae1c373e4fdcd202b16673366f1..6c22adc2b077fcd1e5a0658866c205e093167d6a 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -29,12 +29,12 @@
+     <!-- just until we get deployment to central approved -->
+     <distributionManagement>
+         <repository>
+-            <id>destroystokyo-releases</id>
+-            <url>https://repo.destroystokyo.com/content/repositories/releases/</url>
++            <id>roccodev-releases</id>
++            <url>https://repo.rocco.dev/repository/releases/</url>
+         </repository>
+         <snapshotRepository>
+-            <id>destroystokyo-snapshots</id>
+-            <url>https://repo.destroystokyo.com/content/repositories/snapshots/</url>
++            <id>roccodev-snapshots</id>
++            <url>https://repo.rocco.dev/repository/snapshots/</url>
+         </snapshotRepository>
+     </distributionManagement>
+ 

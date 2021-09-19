@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Wed, 3 Mar 2021 16:26:14 +0100
+Subject: [PATCH] Fix tick loop precision
+
+
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 1a52430f8add824b9e332c67aa21dd92d0a67ace..c31dce3e8e457252b9fc4951b310f088f53194bd 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -584,17 +584,17 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+                     if (wait > 0) {
+                         if (catchupTime < 2E6) {
+                             wait += Math.abs(catchupTime);
+-                        }
+-                        if (wait < catchupTime) {
++                        } else /* KigPaper */ if (wait < catchupTime) {
+                             catchupTime -= wait;
+                             wait = 0;
+-                        } else if (catchupTime > 2E6) {
++                        } else /*if (catchupTime > 2E6)*/ { // KigPaper
+                             wait -= catchupTime;
+-                            catchupTime -= catchupTime;
++                            catchupTime = 0; // KigPaper
+                         }
+                     }
+                     if (wait > 0) {
+                         Thread.sleep(wait / 1000000);
++                        curTime = System.nanoTime(); // KigPaper
+                         wait = TICK_TIME - (curTime - lastTick);
+                     }
+ 

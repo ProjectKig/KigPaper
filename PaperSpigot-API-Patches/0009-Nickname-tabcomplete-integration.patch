@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <roccodev.business@gmail.com>
+Date: Tue, 22 Sep 2020 00:00:55 +0200
+Subject: [PATCH] Nickname tabcomplete integration
+
+
+diff --git a/src/main/java/org/bukkit/command/Command.java b/src/main/java/org/bukkit/command/Command.java
+index 8558c2ecf38d2bf58137d5c4df0c0aae838cdc84..5d441d259dad4087a0d16fac03ab4b1a5c74de7a 100644
+--- a/src/main/java/org/bukkit/command/Command.java
++++ b/src/main/java/org/bukkit/command/Command.java
+@@ -100,7 +100,7 @@ public abstract class Command {
+ 
+         ArrayList<String> matchedPlayers = new ArrayList<String>();
+         for (Player player : sender.getServer().getOnlinePlayers()) {
+-            String name = player.getName();
++            String name = player.getEffectiveName();
+             if ((senderPlayer == null || senderPlayer.canSee(player)) && StringUtil.startsWithIgnoreCase(name, lastWord)) {
+                 matchedPlayers.add(name);
+             }

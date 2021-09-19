@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Thu, 18 Feb 2021 20:37:19 +0100
+Subject: [PATCH] ItemStack max stack size API
+
+
+diff --git a/src/main/java/org/bukkit/inventory/ItemStack.java b/src/main/java/org/bukkit/inventory/ItemStack.java
+index 957a0b563b61ffff41433afd111f83ce277bbbf6..a3c65d2aea1f41411fb79dff98d0d4e18291886c 100644
+--- a/src/main/java/org/bukkit/inventory/ItemStack.java
++++ b/src/main/java/org/bukkit/inventory/ItemStack.java
+@@ -280,7 +280,7 @@ public class ItemStack implements Cloneable, ConfigurationSerializable {
+      */
+     @Utility
+     public int getMaxStackSize() {
+-        if(this.customMaxStackSize != -1) return this.customMaxStackSize; // KigPaper
++        if(this.hasCustomMaxStackSize()) return this.customMaxStackSize; // KigPaper
+         Material material = getType();
+         if (material != null) {
+             return material.getMaxStackSize();

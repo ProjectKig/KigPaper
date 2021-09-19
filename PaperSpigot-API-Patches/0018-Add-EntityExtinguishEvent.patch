@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Wed, 3 Feb 2021 14:07:48 +0100
+Subject: [PATCH] Add EntityExtinguishEvent
+
+
+diff --git a/src/main/java/org/bukkit/event/entity/EntityExtinguishEvent.java b/src/main/java/org/bukkit/event/entity/EntityExtinguishEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..299644c5ce0c7954c5c5f216384741e81a421c3a
+--- /dev/null
++++ b/src/main/java/org/bukkit/event/entity/EntityExtinguishEvent.java
+@@ -0,0 +1,24 @@
++package org.bukkit.event.entity;
++
++import org.bukkit.entity.Entity;
++import org.bukkit.event.HandlerList;
++
++/**
++ * Called when an entity is about to be extinguished.
++ */
++public class EntityExtinguishEvent extends EntityEvent {
++    private static final HandlerList handlers = new HandlerList();
++
++    public EntityExtinguishEvent(Entity toExtinguish) {
++        super(toExtinguish);
++    }
++
++    @Override
++    public HandlerList getHandlers() {
++        return handlers;
++    }
++
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++}

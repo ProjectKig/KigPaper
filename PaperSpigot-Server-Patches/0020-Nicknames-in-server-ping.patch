@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <roccodev.business@gmail.com>
+Date: Tue, 22 Sep 2020 13:06:14 +0200
+Subject: [PATCH] Nicknames in server ping
+
+
+diff --git a/src/main/java/net/minecraft/server/PacketStatusListener.java b/src/main/java/net/minecraft/server/PacketStatusListener.java
+index e4bff04ac4b817f92a6a2ab6ab4e7afa6e9576bd..19eae948012da384c1f50163d467860081873533 100644
+--- a/src/main/java/net/minecraft/server/PacketStatusListener.java
++++ b/src/main/java/net/minecraft/server/PacketStatusListener.java
+@@ -103,7 +103,11 @@ public class PacketStatusListener implements PacketStatusInListener {
+         java.util.List<GameProfile> profiles = new java.util.ArrayList<GameProfile>(players.length);
+         for (Object player : players) {
+             if (player != null) {
+-                profiles.add(((EntityPlayer) player).getProfile());
++                EntityPlayer ep = (EntityPlayer) player;
++                GameProfile profile;
++                if(ep.isNicknamed()) profile = new GameProfile(ep.getProfile().getId(), ep.getNickname());
++                else profile = ep.getProfile();
++                profiles.add(profile);
+             }
+         }
+ 

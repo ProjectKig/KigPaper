@@ -9,6 +9,6 @@ RUN apk add --no-cache --update curl ca-certificates openssl git tar bash sqlite
 USER container
 ENV USER=container HOME=/home/container
 WORKDIR /home/container
-COPY --from=0 ./PaperSpigot-Server/target/paperspigot*.jar /home/server/server.jar
+COPY --from=0 ./KigPaper-Server/target/paperspigot*.jar /home/server/server.jar
 COPY ./docker/entrypoint.sh /entrypoint.sh
 CMD ["/bin/bash", "/entrypoint.sh"]

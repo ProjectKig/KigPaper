@@ -1,0 +1,20 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Sat, 30 Jan 2021 18:05:31 +0100
+Subject: [PATCH] Fix CraftLivingEntity#damage not calling EntityDamageEvent
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+index db915033b217518a918e3553d90d1c193d78e67b..da902708b6d166f85037320ec4e404c0fa36071b 100644
+--- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
++++ b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+@@ -532,7 +532,8 @@ public class CraftEventFactory {
+         } else if (source == DamageSource.FALL) {
+             cause = DamageCause.FALL;
+         } else if (source == DamageSource.GENERIC) {
+-            return new EntityDamageEvent(entity.getBukkitEntity(), null, modifiers, modifierFunctions);
++            //return new EntityDamageEvent(entity.getBukkitEntity(), null, modifiers, modifierFunctions);
++            cause = DamageCause.CUSTOM; // KigPaper
+         }
+ 
+         if (cause != null) {

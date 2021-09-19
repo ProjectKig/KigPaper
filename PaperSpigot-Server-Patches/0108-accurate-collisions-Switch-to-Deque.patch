@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Archer <archer@beezig.eu>
+Date: Mon, 13 Sep 2021 21:27:25 +0200
+Subject: [PATCH] accurate-collisions: Switch to Deque
+
+
+diff --git a/src/main/java/net/minecraft/server/Entity.java b/src/main/java/net/minecraft/server/Entity.java
+index 07344bc96d50f4db4e54a51a306a5eef85b63158..18b89527725d1d495a46565315de7c95c18f884e 100644
+--- a/src/main/java/net/minecraft/server/Entity.java
++++ b/src/main/java/net/minecraft/server/Entity.java
+@@ -850,7 +850,7 @@ public abstract class Entity implements ICommandListener {
+         // KigPaper - Start
+         double motYAccount = PaperSpigotConfig.accurateBlockCollisions ? this.motY : 0.0D; // KigPaper - account for falling speed
+         boolean shouldCollideWithWeb = true, didCollide = false;
+-        Stack<Pair<IBlockData, BlockPosition>> websQueue = new Stack<>();
++        Deque<Pair<IBlockData, BlockPosition>> websQueue = new ArrayDeque<>();
+         // KigPaper - End
+         BlockPosition blockposition = new BlockPosition(this.getBoundingBox().a + 0.001D, this.getBoundingBox().b + 0.001D + motYAccount, this.getBoundingBox().c + 0.001D);
+         BlockPosition blockposition1 = new BlockPosition(this.getBoundingBox().d - 0.001D, this.getBoundingBox().e - 0.001D, this.getBoundingBox().f - 0.001D);

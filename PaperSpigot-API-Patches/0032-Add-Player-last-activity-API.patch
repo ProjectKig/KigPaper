@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Sun, 23 May 2021 00:25:07 +0200
+Subject: [PATCH] Add Player last activity API
+
+
+diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
+index c176863755d116e428e24423f33996241f95f1dc..f2a07235fa4367bd127b9dd94adde989f2b23829 100644
+--- a/src/main/java/org/bukkit/entity/Player.java
++++ b/src/main/java/org/bukkit/entity/Player.java
+@@ -1237,6 +1237,11 @@ public interface Player extends HumanEntity, Conversable, CommandSender, Offline
+      * Essentially this returns a spoofed UUID if the player is nicked, or the user's normal UUID otherwise.
+      */
+     UUID getUniqueIdForDisplay();
++
++    /**
++     * Returns the player's last activity timestamp, according to the "idle timeout" checks.
++     */
++    long getLastActivity();
+     // KigPaper end
+ 
+     /**

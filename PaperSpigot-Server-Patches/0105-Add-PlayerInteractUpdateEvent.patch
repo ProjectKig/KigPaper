@@ -1,0 +1,57 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Thu, 9 Sep 2021 20:49:38 +0200
+Subject: [PATCH] Add PlayerInteractUpdateEvent
+
+
+diff --git a/src/main/java/dev/rocco/kig/paper/impl/event/KigEvents.java b/src/main/java/dev/rocco/kig/paper/impl/event/KigEvents.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..10e700c42cc40aa4d1a90887c780ef334443bc24
+--- /dev/null
++++ b/src/main/java/dev/rocco/kig/paper/impl/event/KigEvents.java
+@@ -0,0 +1,14 @@
++package dev.rocco.kig.paper.impl.event;
++
++import dev.rocco.kig.paper.api.event.PlayerInteractUpdateEvent;
++import net.minecraft.server.BlockPosition;
++import net.minecraft.server.EntityPlayer;
++import org.bukkit.craftbukkit.event.CraftEventFactory;
++
++public class KigEvents {
++    public static boolean fireInteractUpdate(EntityPlayer player, BlockPosition blockPosition) {
++        PlayerInteractUpdateEvent event = new PlayerInteractUpdateEvent(player.getBukkitEntity(), blockPosition.getX(), blockPosition.getY(), blockPosition.getZ());
++        CraftEventFactory.callEvent(event);
++        return !event.isCancelled();
++    }
++}
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index 5dd12c41ae2ef8ed957fca2c57ee5bbfe6be703d..2c6c1e2bc833d59eb5a9bd3990ccbbb719a9a443 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -4,6 +4,8 @@ import com.google.common.collect.Lists;
+ import com.google.common.primitives.Doubles;
+ import com.google.common.primitives.Floats;
+ import dev.rocco.kig.paper.api.event.DisconnectReason;
++import dev.rocco.kig.paper.api.event.PlayerInteractUpdateEvent;
++import dev.rocco.kig.paper.impl.event.KigEvents;
+ import io.netty.buffer.Unpooled;
+ import io.netty.util.concurrent.Future;
+ import io.netty.util.concurrent.GenericFutureListener;
+@@ -781,8 +783,15 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+         }
+ 
+         if (flag) {
+-            this.player.playerConnection.sendPacket(new PacketPlayOutBlockChange(worldserver, blockposition));
+-            this.player.playerConnection.sendPacket(new PacketPlayOutBlockChange(worldserver, blockposition.shift(enumdirection)));
++            // KigPaper start
++            if (KigEvents.fireInteractUpdate(player, blockposition)) {
++                this.player.playerConnection.sendPacket(new PacketPlayOutBlockChange(worldserver, blockposition));
++            }
++            BlockPosition shifted = blockposition.shift(enumdirection);
++            if (KigEvents.fireInteractUpdate(player, shifted)) {
++                this.player.playerConnection.sendPacket(new PacketPlayOutBlockChange(worldserver, shifted));
++            }
++            // KigPaper end
+         }
+ 
+         itemstack = this.player.inventory.getItemInHand();

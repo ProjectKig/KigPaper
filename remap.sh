@@ -1,5 +1,7 @@
 #!/bin/bash
 
+pushd Paper
+
 PS1="$"
 basedir=`pwd`
 workdir=$basedir/work
@@ -68,3 +70,5 @@ if [ "$?" != "0" ]; then
     echo "Failed to install remapped jar."
     exit 1
 fi
+
+popd

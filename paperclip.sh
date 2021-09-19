@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-cp ./PaperSpigot-Server/target/paperspigot*-SNAPSHOT.jar ./Paperclip/paperspigot-1.8.8.jar
-cp ./work/1.8.8/1.8.8.jar ./Paperclip/minecraft_server.1.8.8.jar
+cp ./KigPaper-Server/target/paperspigot*-SNAPSHOT.jar ./Paperclip/paperspigot-1.8.8.jar
+cp ./Paper/work/1.8.8/1.8.8.jar ./Paperclip/minecraft_server.1.8.8.jar
 cd ./Paperclip
 mvn clean package -Dmaven.compiler.release=1.8
 cd ..

@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Mon, 4 Jan 2021 15:43:23 +0100
+Subject: [PATCH] Dynamic server player limit
+
+
+diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
+index c00fce8d1f12c5bf161ee08b2e238a6bd9b2b45f..9c4650a9cffda0bff3d6a148809dc3b3c91d518e 100644
+--- a/src/main/java/org/bukkit/Bukkit.java
++++ b/src/main/java/org/bukkit/Bukkit.java
+@@ -1182,5 +1182,8 @@ public final class Bukkit {
+     public static KnockbackValues getKnockbackSettings() {
+         return server.getKnockbackSettings();
+     }
++    public static void setMaxPlayers(int count) {
++        server.setMaxPlayers(count);
++    }
+     // KigPaper end
+ }
+diff --git a/src/main/java/org/bukkit/Server.java b/src/main/java/org/bukkit/Server.java
+index 5d24b212a774b2fa9fd81e999c14bc25151df485..375d41ce7c4e6595e4cdc718f28c621896fa68cc 100644
+--- a/src/main/java/org/bukkit/Server.java
++++ b/src/main/java/org/bukkit/Server.java
+@@ -1028,5 +1028,10 @@ public interface Server extends PluginMessageRecipient {
+      * @return the server's custom knockback values
+      */
+     KnockbackValues getKnockbackSettings();
++    /**
++     * Sets a new max player count that the server can handle
++     * @param count the new count
++     */
++    void setMaxPlayers(int count);
+     // KigPaper end
+ }

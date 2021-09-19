@@ -1,0 +1,46 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Sun, 30 May 2021 20:10:15 +0200
+Subject: [PATCH] Sink player entities
+
+
+diff --git a/src/main/java/org/bukkit/World.java b/src/main/java/org/bukkit/World.java
+index ef5399dab64a77d811f2579e6f746ca3bc5387fd..6dc094ca957046884b8151f64b186e3c4b687146 100644
+--- a/src/main/java/org/bukkit/World.java
++++ b/src/main/java/org/bukkit/World.java
+@@ -4,12 +4,15 @@ import java.io.File;
+ 
+ import org.bukkit.block.BlockState;
+ import org.bukkit.generator.ChunkGenerator;
++
++import java.nio.ByteBuffer;
+ import java.util.Collection;
+ import java.util.HashMap;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.UUID;
+ import java.util.concurrent.CompletableFuture;
++import java.util.function.Consumer;
+ 
+ import org.bukkit.block.Biome;
+ import org.bukkit.block.Block;
+@@ -1241,6 +1244,19 @@ public interface World extends PluginMessageRecipient, Metadatable {
+      * @return the entity, or {@code null} if it could not be found
+      */
+     Entity getEntityById(int id);
++
++    /**
++     * Spawns a fake player whose sole purpose is to act as a packet sink.
++     * @param location the spawn location
++     * @param packetConsumer a callback to process each packet
++     * @return the spawned player
++     */
++    Player spawnSinkPlayer(Location location, Consumer<ByteBuffer> packetConsumer);
++
++    /**
++     * Returns the list of currently spawned sink players
++     */
++    Collection<Player> getSinkPlayers();
+     // KigPaper end
+ 
+     // Spigot start

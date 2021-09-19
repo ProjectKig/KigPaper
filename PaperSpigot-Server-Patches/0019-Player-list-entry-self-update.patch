@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <roccodev.business@gmail.com>
+Date: Tue, 22 Sep 2020 12:27:37 +0200
+Subject: [PATCH] Player list entry self update
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index 45c3193bca3361ab2d21d519c43755282d44da5a..7a33726e07d842a3972a2121b5fb551ec368071a 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -302,6 +302,13 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+         }
+     }
+ 
++    @Override
++    public void updateSelfPlayerInfo() {
++        if(getHandle().playerConnection == null) return;
++        getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, getHandle()));
++        getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, getHandle()));
++    }
++
+     @Override
+     public boolean equals(Object obj) {
+         if (!(obj instanceof OfflinePlayer)) {

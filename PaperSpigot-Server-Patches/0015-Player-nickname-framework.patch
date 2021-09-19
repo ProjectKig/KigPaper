@@ -1,0 +1,61 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <roccodev.business@gmail.com>
+Date: Mon, 21 Sep 2020 20:24:14 +0200
+Subject: [PATCH] Player nickname framework
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityPlayer.java b/src/main/java/net/minecraft/server/EntityPlayer.java
+index 0c49a256cc481af1ceb7a873b03763e1d942a362..556ab8946c5b0ed66586dd706506d7fd7167637c 100644
+--- a/src/main/java/net/minecraft/server/EntityPlayer.java
++++ b/src/main/java/net/minecraft/server/EntityPlayer.java
+@@ -66,6 +66,19 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
+     public boolean collidesWithEntities = true;
+     public int viewDistance; // PaperSpigot - Player view distance API
+     private int containerUpdateDelay; // PaperSpigot
++    private String nickname; // KigPaper
++
++    public void setNickname(String nickname) {
++        this.nickname = nickname;
++    }
++
++    public boolean isNicknamed() {
++        return nickname != null;
++    }
++
++    public String getRealName() {
++        return super.getName();
++    }
+ 
+     @Override
+     public boolean ad()
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index 32eca3bbdb05366021b06a4da7297cc73a3e4044..eb54b9ec3c9a81bcb5e0d0378b51f824950a2a82 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -80,6 +80,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+     private double health = 20;
+     private boolean scaledHealth = false;
+     private double healthScale = 20;
++    private String nickname; // KigPaper
+ 
+     public CraftPlayer(CraftServer server, EntityPlayer entity) {
+         super(server, entity);
+@@ -258,6 +259,18 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+     }
+     // Paper end
+ 
++    public void setNickname(String nickname) {
++        getHandle().setNickname(nickname);
++    }
++
++    public boolean isNicknamed() {
++        return getHandle().isNicknamed();
++    }
++
++    public String getRealName() {
++        return getHandle().getRealName();
++    }
++
+     @Override
+     public String getDisplayName() {
+         return getHandle().displayName;

@@ -1,0 +1,65 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <roccodev.business@gmail.com>
+Date: Mon, 21 Sep 2020 23:07:37 +0200
+Subject: [PATCH] Skin cache API
+
+
+diff --git a/src/main/java/dev/rocco/kig/paper/api/skin/SkinCache.java b/src/main/java/dev/rocco/kig/paper/api/skin/SkinCache.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..604e87882d8a859deac71e7b927896a64008f978
+--- /dev/null
++++ b/src/main/java/dev/rocco/kig/paper/api/skin/SkinCache.java
+@@ -0,0 +1,10 @@
++package dev.rocco.kig.paper.api.skin;
++
++public interface SkinCache {
++    /**
++     * Loads the player's skin asynchronously, then executes the runnable when the load is complete.
++     * @param name the player's name
++     * @param runnable the code to execute
++     */
++    void loadAndRun(String name, Runnable runnable);
++}
+diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
+index 9884ac6e2fcc0ce1b822310e8837a67cbe9aed63..57a8d0481c92d893615454c3db2d68f62f51e010 100644
+--- a/src/main/java/org/bukkit/Bukkit.java
++++ b/src/main/java/org/bukkit/Bukkit.java
+@@ -12,6 +12,7 @@ import java.util.Set;
+ import java.util.UUID;
+ import java.util.logging.Logger;
+ 
++import dev.rocco.kig.paper.api.skin.SkinCache;
+ import org.bukkit.Warning.WarningState;
+ import org.bukkit.command.CommandException;
+ import org.bukkit.command.CommandMap;
+@@ -1174,5 +1175,8 @@ public final class Bukkit {
+     public static boolean getAllowNamespaced() {
+         return server.getAllowNamespaced();
+     }
++    public static SkinCache getSkinCache() {
++        return server.getSkinCache();
++    }
+     // KigPaper end
+ }
+diff --git a/src/main/java/org/bukkit/Server.java b/src/main/java/org/bukkit/Server.java
+index 0691f96a01811fe00070bbffc132b8fabb7a4527..0f6383c1e69ba31255f9f36060d676a005b0e926 100644
+--- a/src/main/java/org/bukkit/Server.java
++++ b/src/main/java/org/bukkit/Server.java
+@@ -12,6 +12,7 @@ import java.util.Set;
+ import java.util.UUID;
+ import java.util.logging.Logger;
+ 
++import dev.rocco.kig.paper.api.skin.SkinCache;
+ import org.bukkit.Warning.WarningState;
+ import org.bukkit.command.CommandException;
+ import org.bukkit.command.CommandMap;
+@@ -1018,5 +1019,9 @@ public interface Server extends PluginMessageRecipient {
+      * namespaced commands (prefix:command).
+      */
+     boolean getAllowNamespaced();
++    /**
++     * @return async utilities for caching skins
++     */
++    SkinCache getSkinCache();
+     // KigPaper end
+ }

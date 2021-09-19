@@ -1,0 +1,56 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <roccodev.business@gmail.com>
+Date: Sun, 20 Sep 2020 23:57:48 +0200
+Subject: [PATCH] Custom Projectile trails
+
+
+diff --git a/src/main/java/org/bukkit/entity/Arrow.java b/src/main/java/org/bukkit/entity/Arrow.java
+index e7a32f79c0cd13cb7ab4b39325e0ae89017295d9..7af7615f265f9c89b2c1bda2a4b1dbea3bfc8170 100644
+--- a/src/main/java/org/bukkit/entity/Arrow.java
++++ b/src/main/java/org/bukkit/entity/Arrow.java
+@@ -40,6 +40,17 @@ public interface Arrow extends Projectile {
+      */
+     public void setCritical(boolean critical);
+ 
++    /**
++     * Sets whether crit particles should be displayed
++     * @param displayCrit whether to display crit particles
++     */
++    void setDisplayCrit(boolean displayCrit);
++
++    /**
++     * @return whether to display crit particles
++     */
++    boolean shouldDisplayCrit();
++
+     public class Spigot extends Entity.Spigot
+     {
+ 
+diff --git a/src/main/java/org/bukkit/entity/Projectile.java b/src/main/java/org/bukkit/entity/Projectile.java
+index a5599fa36fa914a0ded619876040adf43e942c17..febe5f4d12c0077b2ab4739643ab337e633d93ff 100644
+--- a/src/main/java/org/bukkit/entity/Projectile.java
++++ b/src/main/java/org/bukkit/entity/Projectile.java
+@@ -1,5 +1,6 @@
+ package org.bukkit.entity;
+ 
++import org.bukkit.Effect;
+ import org.bukkit.projectiles.ProjectileSource;
+ 
+ /**
+@@ -57,4 +58,16 @@ public interface Projectile extends Entity {
+      * @param doesBounce whether or not it should bounce.
+      */
+     public void setBounce(boolean doesBounce);
++
++    /**
++     * Sets a trail effect for the projectile.
++     * This effect will be shown every time the position is updated.
++     * @param trailEffect the effect or {@code null} if no effect should be displayed.
++     */
++    void setTrailEffect(Effect trailEffect);
++
++    /**
++     * @return the projectile's trail effect, or {@code null} if no effect is displayed.
++     */
++    Effect getTrailEffect();
+ }

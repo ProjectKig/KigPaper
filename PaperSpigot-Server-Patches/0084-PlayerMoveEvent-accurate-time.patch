@@ -1,0 +1,206 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Wed, 9 Jun 2021 21:27:03 +0200
+Subject: [PATCH] PlayerMoveEvent accurate time
+
+
+diff --git a/src/main/java/net/minecraft/server/PacketPlayInFlying.java b/src/main/java/net/minecraft/server/PacketPlayInFlying.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..5a4e94bd76bb4fc17e4feb3b8c6dbb9d12fbe285
+--- /dev/null
++++ b/src/main/java/net/minecraft/server/PacketPlayInFlying.java
+@@ -0,0 +1,151 @@
++//
++// Source code recreated from a .class file by IntelliJ IDEA
++// (powered by FernFlower decompiler)
++//
++
++package net.minecraft.server;
++
++import org.github.paperspigot.PaperSpigotConfig;
++
++import java.io.IOException;
++
++public class PacketPlayInFlying implements Packet<PacketListenerPlayIn> {
++    protected double x;
++    protected double y;
++    protected double z;
++    protected float yaw;
++    protected float pitch;
++    protected boolean f;
++    protected boolean hasPos;
++    protected boolean hasLook;
++
++    // KigPaper start - last for ProtocolLib compatibility
++    protected long accurateMoveTime;
++
++    public long getAccurateMoveTime() {
++        return accurateMoveTime;
++    }
++    // KigPaper end
++
++    public PacketPlayInFlying() {
++    }
++
++    public void a(PacketListenerPlayIn var1) {
++        var1.a(this);
++    }
++
++    public void a(PacketDataSerializer var1) throws IOException {
++        this.f = var1.readUnsignedByte() != 0;
++    }
++
++    public void b(PacketDataSerializer var1) throws IOException {
++        var1.writeByte(this.f ? 1 : 0);
++    }
++
++    public double a() {
++        return this.x;
++    }
++
++    public double b() {
++        return this.y;
++    }
++
++    public double c() {
++        return this.z;
++    }
++
++    public float d() {
++        return this.yaw;
++    }
++
++    public float e() {
++        return this.pitch;
++    }
++
++    public boolean f() {
++        return this.f;
++    }
++
++    public boolean g() {
++        return this.hasPos;
++    }
++
++    public boolean h() {
++        return this.hasLook;
++    }
++
++    public void a(boolean var1) {
++        this.hasPos = var1;
++    }
++
++    public static class PacketPlayInLook extends PacketPlayInFlying {
++        public PacketPlayInLook() {
++            this.hasLook = true;
++        }
++
++        public void a(PacketDataSerializer var1) throws IOException {
++            this.yaw = var1.readFloat();
++            this.pitch = var1.readFloat();
++            super.a(var1);
++        }
++
++        public void b(PacketDataSerializer var1) throws IOException {
++            var1.writeFloat(this.yaw);
++            var1.writeFloat(this.pitch);
++            super.b(var1);
++        }
++    }
++
++    public static class PacketPlayInPosition extends PacketPlayInFlying {
++        public PacketPlayInPosition() {
++            this.hasPos = true;
++        }
++
++        public void a(PacketDataSerializer var1) throws IOException {
++            this.x = var1.readDouble();
++            this.y = var1.readDouble();
++            this.z = var1.readDouble();
++            super.a(var1);
++            // KigPaper
++            if (PaperSpigotConfig.accurateMoveTiming) {
++                this.accurateMoveTime = System.nanoTime();
++            }
++        }
++
++        public void b(PacketDataSerializer var1) throws IOException {
++            var1.writeDouble(this.x);
++            var1.writeDouble(this.y);
++            var1.writeDouble(this.z);
++            super.b(var1);
++        }
++    }
++
++    public static class PacketPlayInPositionLook extends PacketPlayInFlying {
++        public PacketPlayInPositionLook() {
++            this.hasPos = true;
++            this.hasLook = true;
++        }
++
++        public void a(PacketDataSerializer var1) throws IOException {
++            this.x = var1.readDouble();
++            this.y = var1.readDouble();
++            this.z = var1.readDouble();
++            this.yaw = var1.readFloat();
++            this.pitch = var1.readFloat();
++            super.a(var1);
++            // KigPaper
++            if (PaperSpigotConfig.accurateMoveTiming) {
++                this.accurateMoveTime = System.nanoTime();
++            }
++        }
++
++        public void b(PacketDataSerializer var1) throws IOException {
++            var1.writeDouble(this.x);
++            var1.writeDouble(this.y);
++            var1.writeDouble(this.z);
++            var1.writeFloat(this.yaw);
++            var1.writeFloat(this.pitch);
++            super.b(var1);
++        }
++    }
++}
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index c4fa55a3aa8d0173eeb8f232d92ea26568570aed..cd3c2c6daaf5f8055babb82aaa034459c8522255 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -3,7 +3,6 @@ package net.minecraft.server;
+ import com.google.common.collect.Lists;
+ import com.google.common.primitives.Doubles;
+ import com.google.common.primitives.Floats;
+-import com.google.common.util.concurrent.Futures;
+ import dev.rocco.kig.paper.api.event.DisconnectReason;
+ import io.netty.buffer.Unpooled;
+ import io.netty.util.concurrent.Future;
+@@ -278,7 +277,7 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+                     // Skip the first time we do this
+                     if (true) { // Spigot - don't skip any move events
+                         Location oldTo = to.clone();
+-                        PlayerMoveEvent event = new PlayerMoveEvent(player, from, to);
++                        PlayerMoveEvent event = new PlayerMoveEvent(player, from, to, packetplayinflying.getAccurateMoveTime());
+                         this.server.getPluginManager().callEvent(event);
+ 
+                         // If the event is cancelled we move the player back to their old location.
+diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+index d28ca8573d8017d670259f052944347852b2ac8f..6c73e92520ce24553914cb8d219d63a340248c2d 100644
+--- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
++++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+@@ -224,7 +224,7 @@ public class PaperSpigotConfig
+     }
+     // KigPaper start
+     public static float knockbackHorizontalMultiplier, knockbackVerticalMultiplier, knockbackHorizontalSprinting, knockbackVerticalSprinting, knockbackFriction;
+-    public static boolean betterVehicleHitboxes, nettyReadTimeout, forceConditionalAutoFlush, savePlayerFiles, enableBookDeserialization;
++    public static boolean betterVehicleHitboxes, nettyReadTimeout, forceConditionalAutoFlush, savePlayerFiles, enableBookDeserialization, accurateMoveTiming;
+     private static void knockbackHorizontalMultiplier() {
+         knockbackHorizontalMultiplier = (float) getDouble("knockback.horizontal.normal", 1f);
+     }
+@@ -251,5 +251,8 @@ public class PaperSpigotConfig
+     private static void enableBookDeserialization() {
+         enableBookDeserialization = getBoolean("enable-book-deserialization", false);
+     }
++    private static void accurateMoveTiming() {
++        accurateMoveTiming = getBoolean("accurate-move-timing", false);
++    }
+     // KigPaper end
+ }

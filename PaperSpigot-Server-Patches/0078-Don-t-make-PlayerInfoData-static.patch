@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Sat, 15 May 2021 21:14:25 +0200
+Subject: [PATCH] Don't make PlayerInfoData static
+
+
+diff --git a/src/main/java/net/minecraft/server/PacketPlayOutPlayerInfo.java b/src/main/java/net/minecraft/server/PacketPlayOutPlayerInfo.java
+index 890c4fc66d00c92b55093a1691ee97b7c155ce78..95308d8ad6a0a92813e91e6f9a1821cce8e034ff 100644
+--- a/src/main/java/net/minecraft/server/PacketPlayOutPlayerInfo.java
++++ b/src/main/java/net/minecraft/server/PacketPlayOutPlayerInfo.java
+@@ -281,7 +281,7 @@ public class PacketPlayOutPlayerInfo implements Packet<PacketListenerPlayOut> {
+         }
+     }
+ 
+-    public static class PlayerInfoData { // KigPaper - make static
++    public class PlayerInfoData { // Don't make static - Breaks ProtocolLib
+ 
+         private final int b;
+         private final WorldSettings.EnumGamemode c;

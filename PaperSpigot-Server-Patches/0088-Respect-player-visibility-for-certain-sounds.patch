@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Sun, 20 Jun 2021 10:28:33 +0200
+Subject: [PATCH] Respect player visibility for certain sounds
+
+
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 4ad6ae1438c98f725557424c46e1e843df9b48d5..9c11ce4e75540713b009ce3bd40c608451992afc 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -946,6 +946,13 @@ public abstract class World implements IBlockAccess {
+     }
+ 
+     public void makeSound(Entity entity, String s, float f, float f1) {
++        // KigPaper start - respect visibility for players
++        if (entity instanceof EntityHuman) {
++            this.a((EntityHuman) entity, s, f, f1);
++            return;
++        }
++        // KigPaper end
++
+         for (int i = 0; i < this.u.size(); ++i) {
+             ((IWorldAccess) this.u.get(i)).a(s, entity.locX, entity.locY, entity.locZ, f, f1);
+         }

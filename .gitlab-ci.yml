@@ -12,8 +12,8 @@ maven build:
     - git config --global user.name 'KIG CI Builds'
     - git config --global user.email 'contact+ci-builds@playkig.com'
     - git submodule update --init
-    - ./remap.sh &&./decompile.sh && ./init.sh && ./newApplyPatches.sh
-    - cp server_ci_pom.xml PaperSpigot-Server/pom.xml
-    - cp api_ci_pom.xml PaperSpigot-API/pom.xml
+    - ./remap.sh &&./decompile.sh && ./init.sh && ./applyPatches.sh
+    - cp server_ci_pom.xml KigPaper-Server/pom.xml
+    - cp api_ci_pom.xml KigPaper-API/pom.xml
     - mvn package deploy -f ci_pom.xml -s ci_settings.xml
 ...

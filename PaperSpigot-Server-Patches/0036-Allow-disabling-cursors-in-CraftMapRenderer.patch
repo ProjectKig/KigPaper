@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Mon, 8 Feb 2021 16:49:15 +0100
+Subject: [PATCH] Allow disabling cursors in CraftMapRenderer
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/map/CraftMapRenderer.java b/src/main/java/org/bukkit/craftbukkit/map/CraftMapRenderer.java
+index ad47bdd4de350fc1edb7edd452e6b7fb7b8892a2..74f80c8de2932ab9fbbc50371a899cc1f2d11bf2 100644
+--- a/src/main/java/org/bukkit/craftbukkit/map/CraftMapRenderer.java
++++ b/src/main/java/org/bukkit/craftbukkit/map/CraftMapRenderer.java
+@@ -34,16 +34,17 @@ public class CraftMapRenderer extends MapRenderer {
+         while (cursors.size() > 0) {
+             cursors.removeCursor(cursors.getCursor(0));
+         }
+-
+-        for (UUID key : worldMap.decorations.keySet()) { // Spigot string -> uuid.
+-            // If this cursor is for a player check visibility with vanish system
+-            Player other = Bukkit.getPlayer(key); // Spigot
+-            if (other != null && !player.canSee(other)) {
+-                continue;
++        if(getDrawCursors()) { // KigPaper
++            for (UUID key : worldMap.decorations.keySet()) { // Spigot string -> uuid.
++                // If this cursor is for a player check visibility with vanish system
++                Player other = Bukkit.getPlayer(key); // Spigot
++                if (other != null && !player.canSee(other)) {
++                    continue;
++                }
++
++                MapIcon decoration = (MapIcon) worldMap.decorations.get(key);
++                cursors.addCursor(decoration.getX(), decoration.getY(), (byte) (decoration.getRotation() & 15), decoration.getType());
+             }
+-      
+-            MapIcon decoration = (MapIcon) worldMap.decorations.get(key);
+-            cursors.addCursor(decoration.getX(), decoration.getY(), (byte) (decoration.getRotation() & 15), decoration.getType());
+         }
+     }
+ 

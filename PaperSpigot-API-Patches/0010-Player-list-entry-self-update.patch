@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <roccodev.business@gmail.com>
+Date: Tue, 22 Sep 2020 12:12:33 +0200
+Subject: [PATCH] Player list entry self update
+
+
+diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
+index 3e340f795ba1d05f766e5aeea3dd21d16e469ca0..4ccd1e99b5dc69b9562f652d101cfbc1708b4c94 100644
+--- a/src/main/java/org/bukkit/entity/Player.java
++++ b/src/main/java/org/bukkit/entity/Player.java
+@@ -1214,6 +1214,13 @@ public interface Player extends HumanEntity, Conversable, CommandSender, Offline
+      */
+     String getEffectiveName();
+ 
++    /**
++     * Updates the user's player list entry.
++     * This change only applies to the current player.
++     * To change the display for other players, use {@link Player#hidePlayer(Player)} and {@link Player#showPlayer(Player)} instead.
++     */
++    void updateSelfPlayerInfo();
++
+     /**
+      * Resets the title displayed to the player.
+      */

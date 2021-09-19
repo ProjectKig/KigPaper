@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Mon, 7 Jun 2021 23:34:15 +0200
+Subject: [PATCH] Update pom to new Paper repo
+
+
+diff --git a/pom.xml b/pom.xml
+index 6aaba50276525deab2e50a92d80fa57f8ed43faa..2be32c45ca63129a85dbf6898f270a1cf39ab7fa 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -100,7 +100,7 @@
+         <!-- PaperSpigot - Repo for gitdescribe -->
+         <pluginRepository>
+             <id>destroystokyo</id>
+-            <url>https://ci.destroystokyo.com/plugin/repository/everything/</url>
++            <url>https://papermc.io/repo/repository/maven-public/</url>
+         </pluginRepository>
+     </pluginRepositories>
+ 

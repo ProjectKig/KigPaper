@@ -1,0 +1,51 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Fri, 12 Feb 2021 16:01:21 +0100
+Subject: [PATCH] Make Netty timeout kick configurable
+
+
+diff --git a/src/main/java/net/minecraft/server/ServerConnection.java b/src/main/java/net/minecraft/server/ServerConnection.java
+index f13182c186723c0fe6ac695c8fe3a0c0bcfaab5d..c8c6ae97b6dacd790c8a810732fceb2832842780 100644
+--- a/src/main/java/net/minecraft/server/ServerConnection.java
++++ b/src/main/java/net/minecraft/server/ServerConnection.java
+@@ -26,6 +26,7 @@ import java.util.List;
+ import java.util.concurrent.Callable;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
++import org.github.paperspigot.PaperSpigotConfig;
+ 
+ public class ServerConnection {
+ 
+@@ -91,8 +92,10 @@ public class ServerConnection {
+                     } catch (ChannelException channelexception) {
+                         ;
+                     }
+-
+-                    channel.pipeline().addLast("timeout", new ReadTimeoutHandler(30)).addLast("legacy_query", new LegacyPingHandler(ServerConnection.this)).addLast("splitter", new PacketSplitter()).addLast("decoder", new PacketDecoder(EnumProtocolDirection.SERVERBOUND)).addLast("prepender", new PacketPrepender()).addLast("encoder", new PacketEncoder(EnumProtocolDirection.CLIENTBOUND));
++                    // KigPaper start
++                    if(PaperSpigotConfig.nettyReadTimeout) channel.pipeline().addLast("timeout", new ReadTimeoutHandler(30));
++                    // KigPaper end
++                    channel.pipeline().addLast("legacy_query", new LegacyPingHandler(ServerConnection.this)).addLast("splitter", new PacketSplitter()).addLast("decoder", new PacketDecoder(EnumProtocolDirection.SERVERBOUND)).addLast("prepender", new PacketPrepender()).addLast("encoder", new PacketEncoder(EnumProtocolDirection.CLIENTBOUND));
+                     NetworkManager networkmanager = new NetworkManager(EnumProtocolDirection.SERVERBOUND);
+ 
+                     ServerConnection.this.h.add(networkmanager);
+diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+index cb24048dcc4ba183f6f565c4159cc8a51372c959..ed68c5470acadcc87488e9d7582a3c62458763e6 100644
+--- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
++++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+@@ -224,7 +224,7 @@ public class PaperSpigotConfig
+     }
+     // KigPaper start
+     public static float knockbackHorizontalMultiplier, knockbackVerticalMultiplier, knockbackHorizontalSprinting, knockbackVerticalSprinting, knockbackFriction;
+-    public static boolean betterVehicleHitboxes;
++    public static boolean betterVehicleHitboxes, nettyReadTimeout;
+     private static void knockbackHorizontalMultiplier() {
+         knockbackHorizontalMultiplier = (float) getDouble("knockback.horizontal.normal", 1f);
+     }
+@@ -241,5 +241,6 @@ public class PaperSpigotConfig
+         knockbackFriction = (float) getDouble("knockback.friction", 2f);
+     }
+     private static void betterVehicleHitboxes() { betterVehicleHitboxes = getBoolean("better-vehicle-hitboxes", true); }
++    private static void nettyReadTimeout() { nettyReadTimeout = getBoolean("netty-read-timeout", true); }
+     // KigPaper end
+ }

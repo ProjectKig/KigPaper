@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Sat, 6 Feb 2021 13:59:56 +0100
+Subject: [PATCH] Make forced chunk saving configurable
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+index b1ce1da665727c51bd548ded7e8b0bd1579b0e7c..86e842e9ce705301d83d0d422fb9f856c494e835 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+@@ -228,7 +228,8 @@ public class CraftWorld implements World {
+             return false;
+         }
+         // PaperSpigot end
+-        if (chunk.mustSave) {   // If chunk had previously been queued to save, must do save to avoid loss of that data
++        if (world.paperSpigotConfig.forceChunkSaveOnUnload /* KigPaper */ && chunk.mustSave) {
++            // If chunk had previously been queued to save, must do save to avoid loss of that data
+             save = true;
+         }
+ 
+diff --git a/src/main/java/org/github/paperspigot/PaperSpigotWorldConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotWorldConfig.java
+index 67e56df017b98222e64fc46e97a2b104e6f0d69f..01f86cae1c94d3674efd7ddec53093db880edb93 100644
+--- a/src/main/java/org/github/paperspigot/PaperSpigotWorldConfig.java
++++ b/src/main/java/org/github/paperspigot/PaperSpigotWorldConfig.java
+@@ -408,4 +408,11 @@ public class PaperSpigotWorldConfig
+     {
+         disableTeleportationSuffocationCheck = getBoolean("disable-teleportation-suffocation-check", false);
+     }
++
++    // KigPaper start
++    public boolean forceChunkSaveOnUnload;
++    private void forceChunkSaveOnUnload() {
++        forceChunkSaveOnUnload = getBoolean("force-chunk-save-unload", true);
++    }
++    // KigPaper end
+ }

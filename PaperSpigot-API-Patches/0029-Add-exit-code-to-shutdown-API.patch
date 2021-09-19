@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Wed, 14 Apr 2021 14:00:10 +0200
+Subject: [PATCH] Add exit code to shutdown API
+
+
+diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
+index 9c4650a9cffda0bff3d6a148809dc3b3c91d518e..1f4c1da1546f419a4cb59546173f53fb2265527f 100644
+--- a/src/main/java/org/bukkit/Bukkit.java
++++ b/src/main/java/org/bukkit/Bukkit.java
+@@ -1185,5 +1185,8 @@ public final class Bukkit {
+     public static void setMaxPlayers(int count) {
+         server.setMaxPlayers(count);
+     }
++    public static void shutdown(int exitCode) {
++        server.shutdown(exitCode);
++    }
+     // KigPaper end
+ }
+diff --git a/src/main/java/org/bukkit/Server.java b/src/main/java/org/bukkit/Server.java
+index 375d41ce7c4e6595e4cdc718f28c621896fa68cc..554e07f8542e9f53bf91c0eea325a05c6129d2d0 100644
+--- a/src/main/java/org/bukkit/Server.java
++++ b/src/main/java/org/bukkit/Server.java
+@@ -597,6 +597,15 @@ public interface Server extends PluginMessageRecipient {
+      */
+     public void shutdown();
+ 
++    // KigPaper start
++
++    /**
++     * Shuts the server down, stopping everything.
++     * @param exitCode the exit code to use
++     */
++    void shutdown(int exitCode);
++    // KigPaper end
++
+     /**
+      * Broadcasts the specified message to every user with the given
+      * permission name.

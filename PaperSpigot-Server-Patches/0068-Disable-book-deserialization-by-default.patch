@@ -1,0 +1,48 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Mon, 26 Apr 2021 09:25:19 +0200
+Subject: [PATCH] Disable book deserialization by default
+
+
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index 6c449359246a127a669051969168b9ca77e5172f..87afa4b2aaf15c5a9a8c22af30639037dda2d555 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -2007,6 +2007,7 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+ 
+         try { // CraftBukkit
+         if ("MC|BEdit".equals(packetplayincustompayload.a())) {
++            if (!PaperSpigotConfig.enableBookDeserialization) return; // KigPaper
+             if (this.lastBookTick + 20 > MinecraftServer.currentTick) {
+                 this.disconnect("Book edited too quickly! (Attempted server crash?)");
+                 return;
+@@ -2044,6 +2045,7 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+ 
+             return;
+         } else if ("MC|BSign".equals(packetplayincustompayload.a())) {
++            if (!PaperSpigotConfig.enableBookDeserialization) return; // KigPaper
+             if (this.lastBookTick + 20 > MinecraftServer.currentTick) {
+                 this.disconnect("Book edited too quickly! (Attempted server crash?)");
+                 return;
+diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+index f628a8bc02664b12713057a6bfe2df4a93423178..d28ca8573d8017d670259f052944347852b2ac8f 100644
+--- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
++++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+@@ -224,7 +224,7 @@ public class PaperSpigotConfig
+     }
+     // KigPaper start
+     public static float knockbackHorizontalMultiplier, knockbackVerticalMultiplier, knockbackHorizontalSprinting, knockbackVerticalSprinting, knockbackFriction;
+-    public static boolean betterVehicleHitboxes, nettyReadTimeout, forceConditionalAutoFlush, savePlayerFiles;
++    public static boolean betterVehicleHitboxes, nettyReadTimeout, forceConditionalAutoFlush, savePlayerFiles, enableBookDeserialization;
+     private static void knockbackHorizontalMultiplier() {
+         knockbackHorizontalMultiplier = (float) getDouble("knockback.horizontal.normal", 1f);
+     }
+@@ -248,5 +248,8 @@ public class PaperSpigotConfig
+     private static void savePlayerFiles() {
+         savePlayerFiles = getBoolean("save-player-files", true);
+     }
++    private static void enableBookDeserialization() {
++        enableBookDeserialization = getBoolean("enable-book-deserialization", false);
++    }
+     // KigPaper end
+ }

@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Fri, 6 Aug 2021 15:12:16 +0200
+Subject: [PATCH] Don't check for version in /version
+
+
+diff --git a/src/main/java/org/bukkit/command/defaults/VersionCommand.java b/src/main/java/org/bukkit/command/defaults/VersionCommand.java
+index e91e1d8c1215d19a78611d3c8302ed9634bfbda5..9fa059390ad2d3bec24b2b76fa544f8d20be5ca5 100644
+--- a/src/main/java/org/bukkit/command/defaults/VersionCommand.java
++++ b/src/main/java/org/bukkit/command/defaults/VersionCommand.java
+@@ -159,6 +159,7 @@ public class VersionCommand extends BukkitCommand {
+                 return;
+             }
+         }
++        /*
+         versionLock.lock();
+         try {
+             if (hasVersion) {
+@@ -179,7 +180,7 @@ public class VersionCommand extends BukkitCommand {
+             }
+         } finally {
+             versionLock.unlock();
+-        }
++        }*/ // KigPaper
+     }
+ 
+     private void obtainVersion() {

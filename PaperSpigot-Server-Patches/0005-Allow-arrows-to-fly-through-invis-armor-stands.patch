@@ -1,0 +1,51 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <roccodev.business@gmail.com>
+Date: Sat, 8 Aug 2020 19:16:21 +0200
+Subject: [PATCH] Allow arrows to fly through invis armor stands
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityArrow.java b/src/main/java/net/minecraft/server/EntityArrow.java
+index e9df2f44cae6d6febaee0cb949adc3b53aee0dd0..61526c50961cf580a75c38c53c218461732d3fe1 100644
+--- a/src/main/java/net/minecraft/server/EntityArrow.java
++++ b/src/main/java/net/minecraft/server/EntityArrow.java
+@@ -228,6 +228,10 @@ public class EntityArrow extends Entity implements IProjectile {
+                     movingobjectposition = null;
+                 }
+             }
++            // KigPaper start - Allow arrows to fly through invisible armor stands
++            else if (movingobjectposition != null && movingobjectposition.entity instanceof EntityArmorStand && movingobjectposition.entity.isInvisible())
++                movingobjectposition = null;
++            // KigPaper end
+             // PaperSpigot end
+ 
+             if (movingobjectposition != null) {
+diff --git a/src/main/java/net/minecraft/server/EntityFishingHook.java b/src/main/java/net/minecraft/server/EntityFishingHook.java
+index 7730337a6472dac948f14fdc188da3db07c3304a..0c1c99c8f09b79182d0e9ae86f70e9aa5ce73982 100644
+--- a/src/main/java/net/minecraft/server/EntityFishingHook.java
++++ b/src/main/java/net/minecraft/server/EntityFishingHook.java
+@@ -194,6 +194,10 @@ public class EntityFishingHook extends Entity {
+                     movingobjectposition = null;
+                 }
+             }
++            // KigPaper start - Allow arrows to fly through invisible armor stands
++            else if (movingobjectposition != null && movingobjectposition.entity instanceof EntityArmorStand && movingobjectposition.entity.isInvisible())
++                movingobjectposition = null;
++            // KigPaper end
+             // PaperSpigot end
+ 
+             if (movingobjectposition != null) {
+diff --git a/src/main/java/net/minecraft/server/EntityProjectile.java b/src/main/java/net/minecraft/server/EntityProjectile.java
+index 17e174bc8d3c7039212b3de7ae02f008f4842774..fa090e9ba2e42a891983074b7c2162f2cc629add 100644
+--- a/src/main/java/net/minecraft/server/EntityProjectile.java
++++ b/src/main/java/net/minecraft/server/EntityProjectile.java
+@@ -158,6 +158,10 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
+                 movingobjectposition = null;
+             }
+         }
++        // KigPaper start - Allow arrows to fly through invisible armor stands
++        else if (movingobjectposition != null && movingobjectposition.entity instanceof EntityArmorStand && movingobjectposition.entity.isInvisible())
++            movingobjectposition = null;
++        // KigPaper end
+         // PaperSpigot end
+ 
+         if (movingobjectposition != null) {

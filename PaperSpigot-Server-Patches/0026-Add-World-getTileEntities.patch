@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Wed, 20 Jan 2021 17:28:03 +0100
+Subject: [PATCH] Add World getTileEntities
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+index 9d1f779e7214d4d13e3a8bf3ac2153ed2d413785..0cbe995ed98adc342e658384da821f48a8cdb7d0 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+@@ -349,6 +349,16 @@ public class CraftWorld implements World {
+         // However, this entity is not at the moment backed by a server entity class so it may be left.
+         return new CraftItem(world.getServer(), entity);
+     }
++
++    @Override
++    public List<BlockState> getTileEntities() {
++        List<BlockState> list = new ArrayList<BlockState>();
++        for (TileEntity entity : world.tileEntityList) {
++            org.bukkit.block.Block block = world.getWorld().getBlockAt(entity.getPosition().getX(), entity.getPosition().getY(), entity.getPosition().getZ());
++            if(block != null) list.add(block.getState());
++        }
++        return list;
++    }
+     // KigPaper end
+ 
+     private static void randomLocationWithinBlock(Location loc, double xs, double ys, double zs) {

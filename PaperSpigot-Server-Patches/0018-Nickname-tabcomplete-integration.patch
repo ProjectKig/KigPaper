@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <roccodev.business@gmail.com>
+Date: Mon, 21 Sep 2020 23:54:27 +0200
+Subject: [PATCH] Nickname tabcomplete integration
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index 50f76ecc554811cb5e5a7b33d6da1719e82b7900..21fb4cd0ad5e87bbb2eb43d4e6d6b446e46efef8 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -1632,8 +1632,8 @@ public final class CraftServer implements Server {
+         PlayerChatTabCompleteEvent event = new PlayerChatTabCompleteEvent(player, message, completions);
+         String token = event.getLastToken();
+         for (Player p : getOnlinePlayers()) {
+-            if (player.canSee(p) && StringUtil.startsWithIgnoreCase(p.getName(), token)) {
+-                completions.add(p.getName());
++            if (player.canSee(p) && StringUtil.startsWithIgnoreCase(p.getEffectiveName(), token)) {
++                completions.add(p.getEffectiveName());
+             }
+         }
+         pluginManager.callEvent(event);

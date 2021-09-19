@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Wed, 3 Feb 2021 13:46:34 +0100
+Subject: [PATCH] Set last attacked entity on projectile hit
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityArrow.java b/src/main/java/net/minecraft/server/EntityArrow.java
+index 1f039c57f0695fecc0289eef393d1d868b9740d9..61b83390d542cd78b589a5017d8fdb9c55928bea 100644
+--- a/src/main/java/net/minecraft/server/EntityArrow.java
++++ b/src/main/java/net/minecraft/server/EntityArrow.java
+@@ -311,7 +311,9 @@ public class EntityArrow extends Entity implements IProjectile {
+                             }
+ 
+                             if (this.shooter != null && movingobjectposition.entity != this.shooter && movingobjectposition.entity instanceof EntityHuman && this.shooter instanceof EntityPlayer) {
+-                                ((EntityPlayer) this.shooter).playerConnection.sendPacket(new PacketPlayOutGameStateChange(6, 0.0F));
++                                EntityPlayer shooter = (EntityPlayer) this.shooter;
++                                shooter.p(movingobjectposition.entity); // KigPaper - set attacked entity (used for wolf pathfinding)
++                                shooter.playerConnection.sendPacket(new PacketPlayOutGameStateChange(6, 0.0F));
+                             }
+                         }
+ 

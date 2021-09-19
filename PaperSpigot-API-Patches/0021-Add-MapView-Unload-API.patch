@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Thu, 11 Feb 2021 17:24:02 +0100
+Subject: [PATCH] Add MapView Unload API
+
+
+diff --git a/src/main/java/org/bukkit/map/MapView.java b/src/main/java/org/bukkit/map/MapView.java
+index 65c415962a8ac79c1190fb7fad58ada6ddd38ec6..4826ea8de58552ac8f7c67d09e0cbb1477331559 100644
+--- a/src/main/java/org/bukkit/map/MapView.java
++++ b/src/main/java/org/bukkit/map/MapView.java
+@@ -154,4 +154,10 @@ public interface MapView {
+      */
+     public boolean removeRenderer(MapRenderer renderer);
+ 
++    // KigPaper start
++    /**
++     * Unloads the map from the main world's cached maps, and also removes the file from the world data folder.
++     */
++    void unload();
++    // KigPaper end
+ }

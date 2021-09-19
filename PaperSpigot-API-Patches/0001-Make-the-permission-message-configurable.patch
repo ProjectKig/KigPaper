@@ -1,0 +1,50 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: RoccoDev <roccodev.business@gmail.com>
+Date: Fri, 7 Aug 2020 23:45:58 +0200
+Subject: [PATCH] Make the permission message configurable
+
+
+diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
+index 8fbc82833d16138914e379fef9a38c206d9cc07b..9b47a61ba855f56e20c03058e31037dcd7e082d5 100644
+--- a/src/main/java/org/bukkit/Bukkit.java
++++ b/src/main/java/org/bukkit/Bukkit.java
+@@ -1166,4 +1166,10 @@ public final class Bukkit {
+     {
+         return server.spigot();
+     }
++
++    // KigPaper start
++    public static String getPermissionMessage() {
++        return server.getPermissionMessage();
++    }
++    // KigPaper end
+ }
+diff --git a/src/main/java/org/bukkit/Server.java b/src/main/java/org/bukkit/Server.java
+index 1b62463a1e18d7e35524e06e791d321d6b3823c0..29b3d88f57e7fe103c966c4506c2cebf65a1d411 100644
+--- a/src/main/java/org/bukkit/Server.java
++++ b/src/main/java/org/bukkit/Server.java
+@@ -1007,4 +1007,11 @@ public interface Server extends PluginMessageRecipient {
+     }
+ 
+     Spigot spigot();
++
++    // KigPaper start
++    /**
++     * @return the server's no permission message
++     */
++    String getPermissionMessage();
++    // KigPaper end
+ }
+diff --git a/src/main/java/org/bukkit/command/Command.java b/src/main/java/org/bukkit/command/Command.java
+index c126a1e7e68fd8b81e51d8bdb10dd24eccd9db63..8558c2ecf38d2bf58137d5c4df0c0aae838cdc84 100644
+--- a/src/main/java/org/bukkit/command/Command.java
++++ b/src/main/java/org/bukkit/command/Command.java
+@@ -198,7 +198,7 @@ public abstract class Command {
+         }
+ 
+         if (permissionMessage == null) {
+-            target.sendMessage(ChatColor.RED + "I'm sorry, but you do not have permission to perform this command. Please contact the server administrators if you believe that this is in error.");
++            target.sendMessage(Bukkit.getServer().getPermissionMessage());
+         } else if (permissionMessage.length() != 0) {
+             for (String line : permissionMessage.replace("<permission>", permission).split("\n")) {
+                 target.sendMessage(line);
