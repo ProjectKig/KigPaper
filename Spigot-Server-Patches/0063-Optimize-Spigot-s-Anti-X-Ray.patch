@@ -1,4 +1,4 @@
-From 6c95bccef626e82070a9a0d9b239ff03c7d758e6 Mon Sep 17 00:00:00 2001
+From 4222b417aed27fedcce9ca54c96f63fa17e504bb Mon Sep 17 00:00:00 2001
 From: Iceee <andrew@opticgaming.tv>
 Date: Thu, 23 Apr 2015 17:26:21 -0400
 Subject: [PATCH] Optimize Spigot's Anti X-Ray
@@ -84,5 +84,5 @@ index 7221b507..5466a61c 100644
              updateNearbyBlocks( world, position, 2, false ); // 2 is the radius, we shouldn't change it as that would make it exponentially slower
              update.stopTiming();
 -- 
-2.26.2
+2.34.0
 

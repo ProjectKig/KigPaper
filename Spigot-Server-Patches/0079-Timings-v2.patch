@@ -1,4 +1,4 @@
-From 36e7f79b000f2f54b6fb4ef7927c0dca7bc21ec8 Mon Sep 17 00:00:00 2001
+From d19bcfa1cb87ce084c3ddfe845cc7e3a99b270e4 Mon Sep 17 00:00:00 2001
 From: Aikar <aikar@aikar.co>
 Date: Fri, 8 Jan 2016 23:36:39 -0600
 Subject: [PATCH] Timings v2
@@ -1163,5 +1163,5 @@ index f6a67d68..b9d185d9 100644
      {
          int count = getInt( "settings.netty-threads", 4 );
 -- 
-2.26.2
+2.34.0
 
