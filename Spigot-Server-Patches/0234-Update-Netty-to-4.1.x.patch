@@ -1,0 +1,427 @@
+From 1d47e3b1715a3026415d1f9f0200e89598862342 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Sat, 4 Jun 2022 00:22:13 +0200
+Subject: [PATCH] Update Netty to 4.1.x
+
+This also adds support for newer Java versions.
+
+diff --git a/pom.xml b/pom.xml
+index 8ca3bbe07..aafcdfa8b 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -14,6 +14,7 @@
+         <junit.version>4.13.2</junit.version>
+         <minecraft.version>1.8.8</minecraft.version>
+         <minecraft_version>1_8_R3</minecraft_version>
++        <netty.version>4.1.77.Final</netty.version>
+         <buildtag.prefix>git-Bukkit-</buildtag.prefix>
+         <buildtag.suffix></buildtag.suffix>
+         <!--PaperSpigot - Bump to 1.8 - This will haunt me -->
+@@ -126,6 +127,12 @@
+             <version>4.4.0</version>
+             <scope>test</scope>
+         </dependency>
++        <!-- KIG: Update Netty -->
++        <dependency>
++            <groupId>io.netty</groupId>
++            <artifactId>netty-all</artifactId>
++            <version>${netty.version}</version>
++        </dependency>
+         <!-- // KigPaper end -->
+     </dependencies>
+ 
+@@ -178,6 +185,7 @@
+                             <Specification-Title>Bukkit</Specification-Title>
+                             <Specification-Version>${api.version}</Specification-Version>
+                             <Specification-Vendor>Bukkit Team</Specification-Vendor>
++                            <Multi-Release>true</Multi-Release> <!-- KIG: Required for log4j support with Java 11+ -->
+                         </manifestEntries>
+                         <manifestSections>
+                             <manifestSection>
+diff --git a/src/main/java/io/netty/channel/PublicNonWakeupRunnable.java b/src/main/java/io/netty/channel/PublicNonWakeupRunnable.java
+deleted file mode 100644
+index 23da1bd09..000000000
+--- a/src/main/java/io/netty/channel/PublicNonWakeupRunnable.java
++++ /dev/null
+@@ -1,4 +0,0 @@
+-package io.netty.channel;
+-
+-public interface PublicNonWakeupRunnable extends SingleThreadEventLoop.NonWakeupRunnable {
+-}
+diff --git a/src/main/java/net/minecraft/server/NetworkManager.java b/src/main/java/net/minecraft/server/NetworkManager.java
+index a0eed18d8..7ea925aa9 100644
+--- a/src/main/java/net/minecraft/server/NetworkManager.java
++++ b/src/main/java/net/minecraft/server/NetworkManager.java
+@@ -10,6 +10,7 @@ import io.netty.channel.local.LocalServerChannel;
+ import io.netty.channel.nio.NioEventLoopGroup;
+ import io.netty.handler.timeout.TimeoutException;
+ import io.netty.util.AttributeKey;
++import io.netty.util.concurrent.AbstractEventExecutor;
+ import io.netty.util.concurrent.Future;
+ import io.netty.util.concurrent.GenericFutureListener;
+ import java.net.SocketAddress;
+@@ -237,7 +238,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet> {
+                     channelfuture.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+                 });
+             } else {
+-                this.channel.eventLoop().execute((PublicNonWakeupRunnable) () -> {
++                this.channel.eventLoop().execute((AbstractEventExecutor.LazyRunnable) () -> {
+                     if (enumprotocol != enumprotocol1) {
+                         NetworkManager.this.a(enumprotocol);
+                     }
+diff --git a/src/main/java/net/minecraft/server/PacketDataSerializer.java b/src/main/java/net/minecraft/server/PacketDataSerializer.java
+index 4a3c90a93..1b6455caf 100644
+--- a/src/main/java/net/minecraft/server/PacketDataSerializer.java
++++ b/src/main/java/net/minecraft/server/PacketDataSerializer.java
+@@ -8,6 +8,7 @@ import io.netty.buffer.ByteBufOutputStream;
+ import io.netty.buffer.ByteBufProcessor;
+ import io.netty.handler.codec.DecoderException;
+ import io.netty.handler.codec.EncoderException;
++import io.netty.util.ByteProcessor;
+ import io.netty.util.ReferenceCounted;
+ import java.io.DataInput;
+ import java.io.DataOutput;
+@@ -16,6 +17,7 @@ import java.io.InputStream;
+ import java.io.OutputStream;
+ import java.nio.ByteBuffer;
+ import java.nio.ByteOrder;
++import java.nio.channels.FileChannel;
+ import java.nio.channels.GatheringByteChannel;
+ import java.nio.channels.ScatteringByteChannel;
+ import java.nio.charset.Charset;
+@@ -221,7 +223,11 @@ public class PacketDataSerializer extends ByteBuf {
+         } else if (j < 0) {
+             throw new DecoderException("The received encoded string buffer length is less than zero! Weird string!");
+         } else {
+-            String s = new String(this.readBytes(j).array(), Charsets.UTF_8);
++            // KigPaper start - array() is not supported on direct buffer after Netty update
++            byte[] buffer = new byte[j];
++            this.readBytes(buffer);
++            // KigPaper end
++            String s = new String(buffer, Charsets.UTF_8);
+ 
+             if (s.length() > i) {
+                 throw new DecoderException("The received string length is longer than maximum allowed (" + j + " > " + i + ")");
+@@ -241,7 +247,9 @@ public class PacketDataSerializer extends ByteBuf {
+             throw new DecoderException("The received encoded string buffer length is less than zero! Weird string!");
+         } else {
+             int len = Math.min(toRead, maxLength);
+-            String s = new String(this.readBytes(len).array(), Charsets.UTF_8);
++            byte[] buffer = new byte[len];
++            this.readBytes(buffer);
++            String s = new String(buffer, Charsets.UTF_8);
+ 
+             int remaining = toRead - len;
+             if (remaining > 0) {
+@@ -844,4 +852,266 @@ public class PacketDataSerializer extends ByteBuf {
+     public boolean release(int i) {
+         return this.a.release(i);
+     }
++
++    // KigPaper start
++    @Override
++    public boolean isReadOnly() {
++        return a.isReadOnly();
++    }
++
++    @Override
++    public ByteBuf asReadOnly() {
++        return a.asReadOnly();
++    }
++
++    @Override
++    public int maxFastWritableBytes() {
++        return a.maxFastWritableBytes();
++    }
++
++    @Override
++    public short getShortLE(int index) {
++        return a.getShortLE(index);
++    }
++
++    @Override
++    public int getUnsignedShortLE(int index) {
++        return a.getUnsignedShortLE(index);
++    }
++
++    @Override
++    public int getMediumLE(int index) {
++        return a.getMediumLE(index);
++    }
++
++    @Override
++    public int getUnsignedMediumLE(int index) {
++        return a.getUnsignedMediumLE(index);
++    }
++
++    @Override
++    public int getIntLE(int index) {
++        return a.getIntLE(index);
++    }
++
++    @Override
++    public long getUnsignedIntLE(int index) {
++        return a.getUnsignedIntLE(index);
++    }
++
++    @Override
++    public long getLongLE(int index) {
++        return a.getLongLE(index);
++    }
++
++    @Override
++    public float getFloatLE(int index) {
++        return a.getFloatLE(index);
++    }
++
++    @Override
++    public double getDoubleLE(int index) {
++        return a.getDoubleLE(index);
++    }
++
++    @Override
++    public int getBytes(int index, FileChannel out, long position, int length) throws IOException {
++        return a.getBytes(index, out, position, length);
++    }
++
++    @Override
++    public CharSequence getCharSequence(int index, int length, Charset charset) {
++        return a.getCharSequence(index, length, charset);
++    }
++
++    @Override
++    public ByteBuf setShortLE(int index, int value) {
++        return a.setShortLE(index, value);
++    }
++
++    @Override
++    public ByteBuf setMediumLE(int index, int value) {
++        return a.setMediumLE(index, value);
++    }
++
++    @Override
++    public ByteBuf setIntLE(int index, int value) {
++        return a.setIntLE(index, value);
++    }
++
++    @Override
++    public ByteBuf setLongLE(int index, long value) {
++        return a.setLongLE(index, value);
++    }
++
++    @Override
++    public ByteBuf setFloatLE(int index, float value) {
++        return a.setFloatLE(index, value);
++    }
++
++    @Override
++    public ByteBuf setDoubleLE(int index, double value) {
++        return a.setDoubleLE(index, value);
++    }
++
++    @Override
++    public int setBytes(int index, FileChannel in, long position, int length) throws IOException {
++        return a.setBytes(index, in, position, length);
++    }
++
++    @Override
++    public int setCharSequence(int index, CharSequence sequence, Charset charset) {
++        return a.setCharSequence(index, sequence, charset);
++    }
++
++    @Override
++    public short readShortLE() {
++        return a.readShortLE();
++    }
++
++    @Override
++    public int readUnsignedShortLE() {
++        return a.readUnsignedShortLE();
++    }
++
++    @Override
++    public int readMediumLE() {
++        return a.readMediumLE();
++    }
++
++    @Override
++    public int readUnsignedMediumLE() {
++        return a.readUnsignedMediumLE();
++    }
++
++    @Override
++    public int readIntLE() {
++        return a.readIntLE();
++    }
++
++    @Override
++    public long readUnsignedIntLE() {
++        return a.readUnsignedIntLE();
++    }
++
++    @Override
++    public long readLongLE() {
++        return a.readLongLE();
++    }
++
++    @Override
++    public float readFloatLE() {
++        return a.readFloatLE();
++    }
++
++    @Override
++    public double readDoubleLE() {
++        return a.readDoubleLE();
++    }
++
++    @Override
++    public ByteBuf readRetainedSlice(int length) {
++        return a.readRetainedSlice(length);
++    }
++
++    @Override
++    public CharSequence readCharSequence(int length, Charset charset) {
++        return a.readCharSequence(length, charset);
++    }
++
++    @Override
++    public int readBytes(FileChannel out, long position, int length) throws IOException {
++        return a.readBytes(out, position, length);
++    }
++
++    @Override
++    public ByteBuf writeShortLE(int value) {
++        return a.writeShortLE(value);
++    }
++
++    @Override
++    public ByteBuf writeMediumLE(int value) {
++        return a.writeMediumLE(value);
++    }
++
++    @Override
++    public ByteBuf writeIntLE(int value) {
++        return a.writeIntLE(value);
++    }
++
++    @Override
++    public ByteBuf writeLongLE(long value) {
++        return a.writeLongLE(value);
++    }
++
++    @Override
++    public ByteBuf writeFloatLE(float value) {
++        return a.writeFloatLE(value);
++    }
++
++    @Override
++    public ByteBuf writeDoubleLE(double value) {
++        return a.writeDoubleLE(value);
++    }
++
++    @Override
++    public int writeBytes(FileChannel in, long position, int length) throws IOException {
++        return a.writeBytes(in, position, length);
++    }
++
++    @Override
++    public int writeCharSequence(CharSequence sequence, Charset charset) {
++        return a.writeCharSequence(sequence, charset);
++    }
++
++    @Override
++    public int forEachByte(ByteProcessor processor) {
++        return a.forEachByte(processor);
++    }
++
++    @Override
++    public int forEachByte(int index, int length, ByteProcessor processor) {
++        return a.forEachByte(index, length, processor);
++    }
++
++    @Override
++    public int forEachByteDesc(ByteProcessor processor) {
++        return a.forEachByteDesc(processor);
++    }
++
++    @Override
++    public int forEachByteDesc(int index, int length, ByteProcessor processor) {
++        return a.forEachByteDesc(index, length, processor);
++    }
++
++    @Override
++    public ByteBuf retainedSlice() {
++        return a.retainedSlice();
++    }
++
++    @Override
++    public ByteBuf retainedSlice(int index, int length) {
++        return a.retainedSlice(index, length);
++    }
++
++    @Override
++    public ByteBuf retainedDuplicate() {
++        return a.retainedDuplicate();
++    }
++
++    @Override
++    public boolean isContiguous() {
++        return a.isContiguous();
++    }
++
++    @Override
++    public ByteBuf touch() {
++        return a.touch();
++    }
++
++    @Override
++    public ByteBuf touch(Object hint) {
++        return a.touch(hint);
++    }
++    // KigPaper end
+ }
+diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+index 6b6c0c1c5..26b936404 100644
+--- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
++++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+@@ -184,33 +184,20 @@ public class PaperSpigotConfig
+         stackableWaterBuckets = getBoolean( "stackable-buckets.water", false );
+         stackableMilkBuckets = getBoolean( "stackable-buckets.milk", false );
+ 
+-        Field maxStack;
+-
+-        try {
+-            maxStack = Material.class.getDeclaredField("maxStack");
+-            maxStack.setAccessible(true);
+-
+-            Field modifiers = Field.class.getDeclaredField("modifiers");
+-            modifiers.setAccessible(true);
+-            modifiers.setInt(maxStack, maxStack.getModifiers() & ~Modifier.FINAL);
+-        } catch (Exception e) {
+-            e.printStackTrace();
+-            return;
+-        }
+-
+         try {
+             if (stackableLavaBuckets) {
+-                maxStack.set(Material.LAVA_BUCKET, Material.BUCKET.getMaxStackSize());
++                // KigPaper - don't update Bukkit enum, broken in Java 17
++                //maxStack.set(Material.LAVA_BUCKET, Material.BUCKET.getMaxStackSize());
+                 Items.LAVA_BUCKET.c(Material.BUCKET.getMaxStackSize());
+             }
+ 
+             if (stackableWaterBuckets) {
+-                maxStack.set(Material.WATER_BUCKET, Material.BUCKET.getMaxStackSize());
++                //maxStack.set(Material.WATER_BUCKET, Material.BUCKET.getMaxStackSize());
+                 Items.WATER_BUCKET.c(Material.BUCKET.getMaxStackSize());
+             }
+ 
+             if (stackableMilkBuckets) {
+-                maxStack.set(Material.MILK_BUCKET, Material.BUCKET.getMaxStackSize());
++                //maxStack.set(Material.MILK_BUCKET, Material.BUCKET.getMaxStackSize());
+                 Items.MILK_BUCKET.c(Material.BUCKET.getMaxStackSize());
+             }
+         } catch (Exception e) {
+-- 
+2.36.1
+

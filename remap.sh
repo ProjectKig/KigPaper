@@ -34,18 +34,18 @@ if [ "$checksum" != "$minecrafthash" ]; then
     exit 1
 fi
 
-# KigPaper start - Remove log4j from vanilla jar
-echo "Removing log4j..."
-if [ ! -f "$jarpath-nolog4j.jar" ]; then
-    cp "$jarpath.jar" "$jarpath-nolog4j.jar" 1>/dev/null
-    zip -d "$jarpath-nolog4j.jar" org/apache/logging/log4j/*
-    echo "Removed log4j from vanilla jar. Make sure to have it as a dependency in pom.xml!"
+# KigPaper start - Remove log4j & other deps from vanilla jar
+echo "KIG: Removing dependencies..."
+if [ ! -f "$jarpath-kig-nodeps.jar" ]; then
+    cp "$jarpath.jar" "$jarpath-kig-nodeps.jar" 1>/dev/null
+    zip -d "$jarpath-kig-nodeps.jar" org/apache/logging/log4j/* io/netty/* META-INF/io.netty.*
+    echo "KIG: Removed dependencies from vanilla jar. Make sure to have them in pom.xml!"
 fi
 # KigPaper end
 
 echo "Applying class mappings..."
 if [ ! -f "$jarpath-cl.jar" ]; then
-    java -jar BuildData/bin/SpecialSource-2.jar map -i "$jarpath-nolog4j.jar" -m "$classmappings" -o "$jarpath-cl.jar" 1>/dev/null
+    java -jar BuildData/bin/SpecialSource-2.jar map -i "$jarpath-kig-nodeps.jar" -m "$classmappings" -o "$jarpath-cl.jar" 1>/dev/null
     if [ "$?" != "0" ]; then
         echo "Failed to apply class mappings."
         exit 1
