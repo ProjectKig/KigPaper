@@ -1,0 +1,23 @@
+From d5b9f1d8602a93c120033d1b1957230c73fe973a Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Tue, 4 Oct 2022 22:19:56 +0200
+Subject: [PATCH] Prevent xp orbs from following intangible players
+
+
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 4845fda2..4bf3c09e 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -2896,7 +2896,8 @@ public abstract class World implements IBlockAccess {
+         for (int i = 0; i < this.players.size(); ++i) {
+             EntityHuman entityhuman1 = (EntityHuman) this.players.get(i);
+             // CraftBukkit start - Fixed an NPE
+-            if (entityhuman1 == null || entityhuman1.dead) {
++            if (!(entityhuman1 instanceof EntityPlayer) || entityhuman1.dead
++                    || !((EntityPlayer) entityhuman1).collidesWithEntities) { // KigPaper - add entity collision check
+                 continue;
+             }
+             // CraftBukkit end
+-- 
+2.37.2
+
