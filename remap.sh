@@ -14,7 +14,7 @@ jarpath=$workdir/$minecraftversion/$minecraftversion
 echo "Downloading unmapped vanilla jar..."
 if [ ! -f  "$jarpath.jar" ]; then
     mkdir -p "$workdir/$minecraftversion"
-    curl -s -o "$jarpath.jar" "https://s3.amazonaws.com/Minecraft.Download/versions/$minecraftversion/minecraft_server.$minecraftversion.jar"
+    curl -s -o "$jarpath.jar" "https://launcher.mojang.com/v1/objects/$minecrafthash/server.jar"
     if [ "$?" != "0" ]; then
         echo "Failed to download the vanilla server jar. Check connectivity or try again later."
         exit 1
@@ -24,13 +24,13 @@ fi
 # OS X doesn't have md5sum, just md5 -r
 if [[ "$OSTYPE" == "darwin"* ]]; then
    shopt -s expand_aliases
-   alias md5sum='md5 -r'
-   echo "Using an alias for md5sum on OS X"
+   alias sha1sum='shasum -a 1'
+   echo "Using an alias for sha1sum on OS X"
 fi
 
-checksum=$(md5sum "$jarpath.jar" | cut -d ' ' -f 1)
+checksum=$(sha1sum "$jarpath.jar" | cut -d ' ' -f 1)
 if [ "$checksum" != "$minecrafthash" ]; then
-    echo "The MD5 checksum of the downloaded server jar does not match the BuildData hash."
+    echo "The SHA1 checksum of the downloaded server jar does not match the BuildData hash."
     exit 1
 fi
 

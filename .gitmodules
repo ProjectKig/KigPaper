@@ -6,7 +6,8 @@
 	url = https://hub.spigotmc.org/stash/scm/spigot/craftbukkit.git
 [submodule "BuildData"]
 	path = BuildData
-	url = https://hub.spigotmc.org/stash/scm/spigot/builddata.git
+	url = https://github.com/ProjectKig/BuildData.git
+	branch = ver/1.8.8
 [submodule "Paperclip"]
 	path = Paperclip
 	url = https://github.com/ProjectKig/Old-Paperclip.git
