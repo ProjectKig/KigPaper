@@ -1,0 +1,10 @@
+--- a/net/minecraft/server/GameRules.java
++++ b/net/minecraft/server/GameRules.java
+@@ -24,6 +24,7 @@ public class GameRules {
+         this.a("randomTickSpeed", "3", GameRules.EnumGameRuleType.NUMERICAL_VALUE);
+         this.a("sendCommandFeedback", "true", GameRules.EnumGameRuleType.BOOLEAN_VALUE);
+         this.a("reducedDebugInfo", "false", GameRules.EnumGameRuleType.BOOLEAN_VALUE);
++        this.a("doWaterFreezing", "true", EnumGameRuleType.BOOLEAN_VALUE); // KigPaper
+     }
+ 
+     public void a(String s, String s1, GameRules.EnumGameRuleType gamerules_enumgameruletype) {

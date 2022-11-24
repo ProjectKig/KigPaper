@@ -1,0 +1,31 @@
+From 8a336a37f24555cc0e471251d654e94db779e511 Mon Sep 17 00:00:00 2001
+From: Archer <archer@beezig.eu>
+Date: Thu, 24 Nov 2022 00:32:20 +0100
+Subject: [PATCH] world: Add doWaterFreezing game rule
+
+This commit adds the `doWaterFreezing` game rule to prevent water from
+freezing in cold biomes. As this behaviour is not affected by the
+`randomTickSpeed` game rule, it was previously impossible to prevent
+water from freezing without disabling `iceAndSnow` in PaperSpigot's
+config entirely.
+
+This commit needs the `GameRules.patch` in KigPaper's `nms-patches/`
+directory as `GameRules.java` was not changed by (Paper)Spigot before
+this patch.
+
+diff --git a/src/main/java/net/minecraft/server/WorldServer.java b/src/main/java/net/minecraft/server/WorldServer.java
+index 2f85e585c..3a8bb2a6d 100644
+--- a/src/main/java/net/minecraft/server/WorldServer.java
++++ b/src/main/java/net/minecraft/server/WorldServer.java
+@@ -445,7 +445,7 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+                     blockposition = this.q(new BlockPosition(k + (i1 & 15), 0, l + (i1 >> 8 & 15)));
+                     BlockPosition blockposition1 = blockposition.down();
+ 
+-                    if (this.w(blockposition1)) {
++                    if (this.w(blockposition1) && getGameRules().getBoolean("doWaterFreezing")) { // KigPaper - Custom game rule
+                         // CraftBukkit start
+                         BlockState blockState = this.getWorld().getBlockAt(blockposition1.getX(), blockposition1.getY(), blockposition1.getZ()).getState();
+                         blockState.setTypeId(Block.getId(Blocks.ICE));
+-- 
+2.38.1
+
