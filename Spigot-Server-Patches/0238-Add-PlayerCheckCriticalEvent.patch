@@ -1,0 +1,81 @@
+From 851de63879fd3444ed68c26edf43f568dfe5903d Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Fri, 24 Feb 2023 21:25:32 +0100
+Subject: [PATCH] Add PlayerCheckCriticalEvent
+
+
+diff --git a/src/main/java/net/minecraft/server/EntityArrow.java b/src/main/java/net/minecraft/server/EntityArrow.java
+index 79b9d942c..78bb8bfbe 100644
+--- a/src/main/java/net/minecraft/server/EntityArrow.java
++++ b/src/main/java/net/minecraft/server/EntityArrow.java
+@@ -1,5 +1,6 @@
+ package net.minecraft.server;
+ 
++import dev.rocco.kig.paper.api.event.PlayerCheckCriticalEvent;
+ import dev.rocco.kig.paper.api.event.ProjectileCollideEvent;
+ import dev.rocco.kig.paper.api.particle.ProjectileEffect;
+ import org.bukkit.Location;
+@@ -272,9 +273,22 @@ public class EntityArrow extends Entity implements IProjectile {
+                     f2 = MathHelper.sqrt(this.motX * this.motX + this.motY * this.motY + this.motZ * this.motZ);
+                     int k = MathHelper.f((double) f2 * this.damage);
+ 
++                    // KigPaper start
++                    if (shooter instanceof EntityPlayer) {
++                        PlayerCheckCriticalEvent event = new PlayerCheckCriticalEvent(
++                                ((EntityPlayer) shooter).getBukkitEntity(), movingobjectposition.entity.getBukkitEntity(),
++                                this.isCriticalDamage(), this.random.nextInt(k / 2 + 2), true);
++                        org.bukkit.Bukkit.getPluginManager().callEvent(event);
++                        if (event.isCritical()) {
++                            k += event.getDamageBonus();
++                        }
++                    }
++
++                    /*
+                     if (this.isCriticalDamage()) {
+                         k += this.random.nextInt(k / 2 + 2);
+-                    }
++                    } */ // KigPaper
++                    // KigPaper end
+ 
+                     DamageSource damagesource;
+ 
+diff --git a/src/main/java/net/minecraft/server/EntityHuman.java b/src/main/java/net/minecraft/server/EntityHuman.java
+index d352c6d33..a0824ee67 100644
+--- a/src/main/java/net/minecraft/server/EntityHuman.java
++++ b/src/main/java/net/minecraft/server/EntityHuman.java
+@@ -9,6 +9,7 @@ import java.util.List;
+ import java.util.UUID;
+ 
+ // CraftBukkit start
++import dev.rocco.kig.paper.api.event.PlayerCheckCriticalEvent;
+ import dev.rocco.kig.paper.api.velocity.KnockbackValues;
+ import org.bukkit.Bukkit;
+ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+@@ -977,10 +978,22 @@ public abstract class EntityHuman extends EntityLiving {
+ 
+                 if (f > 0.0F || f1 > 0.0F) {
+                     boolean flag = !world.paperSpigotConfig.disablePlayerCrits && this.fallDistance > 0.0F && !this.onGround && !this.k_() && !this.V() && !this.hasEffect(MobEffectList.BLINDNESS) && this.vehicle == null && entity instanceof EntityLiving; // PaperSpigot
+-
++                    // KigPaper start
++                    if (this instanceof EntityPlayer) {
++                        PlayerCheckCriticalEvent event = new PlayerCheckCriticalEvent(
++                                ((EntityPlayer) this).getBukkitEntity(), entity.getBukkitEntity(),
++                                flag, 1.5F, false);
++                        org.bukkit.Bukkit.getPluginManager().callEvent(event);
++                        flag = event.isCritical();
++                        if (flag && f > 0.0F) {
++                            f *= event.getDamageBonus();
++                        }
++                    }
++                    /*
+                     if (flag && f > 0.0F) {
+                         f *= 1.5F;
+-                    }
++                    } */ // KigPaper
++                    // KigPaper end
+ 
+                     f += f1;
+                     boolean flag1 = false;
+-- 
+2.38.1
+

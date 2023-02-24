@@ -1,0 +1,98 @@
+From 4a0a815cddc0178421c4f863c4641a23d842fcaf Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Fri, 24 Feb 2023 19:24:20 +0100
+Subject: [PATCH] Add PlayerCheckCriticalEvent
+
+
+diff --git a/src/main/java/dev/rocco/kig/paper/api/event/PlayerCheckCriticalEvent.java b/src/main/java/dev/rocco/kig/paper/api/event/PlayerCheckCriticalEvent.java
+new file mode 100644
+index 00000000..7510c2f6
+--- /dev/null
++++ b/src/main/java/dev/rocco/kig/paper/api/event/PlayerCheckCriticalEvent.java
+@@ -0,0 +1,83 @@
++package dev.rocco.kig.paper.api.event;
++
++import org.bukkit.entity.Entity;
++import org.bukkit.entity.Player;
++import org.bukkit.event.HandlerList;
++import org.bukkit.event.player.PlayerEvent;
++
++/**
++ * Fired when a player is attacking an entity. Determines whether the attack is a critical hit.
++ *
++ * <p><b>Note:</b> this event will be called for <b>all</b> player attacks, even those that aren't critical hits.
++ * This way, users can make any attack a critical hit, bypassing vanilla mechanics.
++ * Additionally, it is also fired for "critical" projectile shots.
++ */
++public class PlayerCheckCriticalEvent extends PlayerEvent {
++    private static final HandlerList handlers = new HandlerList();
++
++    private final Entity attacked;
++    private final boolean arrow;
++    private boolean critical;
++    private float damageBonus;
++
++    public PlayerCheckCriticalEvent(Player player, Entity attacked, boolean critical, float damageBonus, boolean arrow) {
++        super(player);
++        this.attacked = attacked;
++        this.critical = critical;
++        this.damageBonus = damageBonus;
++        this.arrow = arrow;
++    }
++
++    /**
++     * Returns whether the attack is a projectile shot or a melee attack.
++     */
++    public boolean isArrow() {
++        return arrow;
++    }
++
++    /**
++     * Returns whether the attack will be a critical hit after the event.
++     */
++    public boolean isCritical() {
++        return critical;
++    }
++
++    /**
++     * Sets whether the attack will be a critical hit after the event.
++     */
++    public void setCritical(boolean critical) {
++        this.critical = critical;
++    }
++
++    /**
++     * Sets the bonus damage multiplier granted by this attack, if it is a critical hit.
++     * The vanilla value is 1.5x for melee attacks. For arrow shots, this is a random value in the range
++     * [0; damage * 0.5 + 2), which is added to the final damage.
++     */
++    public void setDamageBonus(float damageBonus) {
++        this.damageBonus = damageBonus;
++    }
++
++    /**
++     * Returns the bonus damage multiplier granted by this attack, if it is a critical hit.
++     */
++    public float getDamageBonus() {
++        return damageBonus;
++    }
++
++    /**
++     * Returns the entity that was attacked.
++     */
++    public Entity getAttackedEntity() {
++        return attacked;
++    }
++
++    @Override
++    public HandlerList getHandlers() {
++        return handlers;
++    }
++
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++}
+-- 
+2.38.1
+
