@@ -1,0 +1,97 @@
+From 025650cb9a271d96c3dc1b49bc8378569049c7d0 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Sat, 4 Jun 2022 00:14:05 +0200
+Subject: [PATCH] Fix Java 17 imports
+
+
+diff --git a/src/main/java/co/aikar/util/LoadingMap.java b/src/main/java/co/aikar/util/LoadingMap.java
+index a9f29199..27065e19 100644
+--- a/src/main/java/co/aikar/util/LoadingMap.java
++++ b/src/main/java/co/aikar/util/LoadingMap.java
+@@ -25,18 +25,9 @@ package co.aikar.util;
+ 
+ 
+ import com.google.common.base.Function;
+-import org.bukkit.Material;
+-import co.aikar.timings.TimingHistory;
+-import org.w3c.dom.css.Counter;
+ 
+ import java.lang.reflect.Constructor;
+-import java.util.AbstractMap;
+-import java.util.Collection;
+-import java.util.EnumMap;
+-import java.util.HashMap;
+-import java.util.IdentityHashMap;
+-import java.util.Map;
+-import java.util.Set;
++import java.util.*;
+ 
+ /**
+  * Allows you to pass a Loader function that when a key is accessed that doesn't exists,
+diff --git a/src/main/java/org/spigotmc/CustomTimingsHandler.java b/src/main/java/org/spigotmc/CustomTimingsHandler.java
+index 7e89b97b..e1072576 100644
+--- a/src/main/java/org/spigotmc/CustomTimingsHandler.java
++++ b/src/main/java/org/spigotmc/CustomTimingsHandler.java
+@@ -23,54 +23,19 @@
+  */
+ package org.spigotmc;
+ 
+-import org.bukkit.Bukkit;
+-import org.bukkit.plugin.AuthorNagException;
+-import org.bukkit.plugin.Plugin;
+-import co.aikar.timings.NullTimingHandler;
+-import co.aikar.timings.Timing;
+-import co.aikar.timings.Timings;
+-import co.aikar.timings.TimingsManager;
+-import sun.reflect.Reflection;
+-
+-import java.lang.reflect.Method;
+-import java.util.logging.Level;
+-
+ /**
+  * This is here for legacy purposes incase any plugin used it.
+  *
+  * If you use this, migrate ASAP as this will be removed in the future!
+  *
+- * @deprecated
++ * @deprecated KigPaper - this class does nothing
+  * @see co.aikar.timings.Timings#of
+  */
+ @Deprecated
+ public final class CustomTimingsHandler {
+-    private final Timing handler;
+-
+-    public CustomTimingsHandler(String name) {
+-        Timing timing;
+-
+-        Plugin plugin = null;
+-        try {
+-             plugin = TimingsManager.getPluginByClassloader(Reflection.getCallerClass(2));
+-        } catch (Exception ignored) {}
+-
+-        new AuthorNagException("Deprecated use of CustomTimingsHandler. Please Switch to Timings.of ASAP").printStackTrace();
+-        if (plugin != null) {
+-            timing = Timings.of(plugin, "(Deprecated API) " + name);
+-        } else {
+-            try {
+-                final Method ofSafe = TimingsManager.class.getMethod("getHandler", String.class, String.class, Timing.class, boolean.class);
+-                timing = (Timing) ofSafe.invoke("Minecraft", "(Deprecated API) " + name, null, true);
+-            } catch (Exception e) {
+-                Bukkit.getLogger().log(Level.SEVERE, "This handler could not be registered");
+-                timing = Timings.NULL_HANDLER;
+-            }
+-        }
+-        handler = timing;
+-    }
+-
+-    public void startTiming() { handler.startTiming(); }
+-    public void stopTiming() { handler.stopTiming(); }
++    // KigPaper - deprecated class is NOPed, some APIs it'd use were incompatible with newer Java versions
++    public CustomTimingsHandler(String name) {}
+ 
++    public void startTiming() {}
++    public void stopTiming() {}
+ }
+-- 
+2.39.2
+

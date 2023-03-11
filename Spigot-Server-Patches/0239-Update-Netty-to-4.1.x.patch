@@ -1,23 +1,33 @@
-From 1d47e3b1715a3026415d1f9f0200e89598862342 Mon Sep 17 00:00:00 2001
+From a6ee7874044ab88681f1c3d717e17660bc214e8a Mon Sep 17 00:00:00 2001
 From: RoccoDev <hey@rocco.dev>
-Date: Sat, 4 Jun 2022 00:22:13 +0200
+Date: Sat, 11 Mar 2023 14:33:39 +0100
 Subject: [PATCH] Update Netty to 4.1.x
 
-This also adds support for newer Java versions.
 
 diff --git a/pom.xml b/pom.xml
-index 8ca3bbe07..aafcdfa8b 100644
+index 8ca3bbe07..a7474d133 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -14,6 +14,7 @@
          <junit.version>4.13.2</junit.version>
          <minecraft.version>1.8.8</minecraft.version>
          <minecraft_version>1_8_R3</minecraft_version>
-+        <netty.version>4.1.77.Final</netty.version>
++        <netty.version>4.1.86.Final</netty.version>
          <buildtag.prefix>git-Bukkit-</buildtag.prefix>
          <buildtag.suffix></buildtag.suffix>
          <!--PaperSpigot - Bump to 1.8 - This will haunt me -->
-@@ -126,6 +127,12 @@
+@@ -56,6 +57,10 @@
+                     <groupId>org.apache.logging.log4j</groupId>
+                     <artifactId>log4j-core</artifactId>
+                 </exclusion>
++                <exclusion>
++                    <groupId>io.netty</groupId>
++                    <artifactId>netty-all</artifactId>
++                </exclusion>
+             </exclusions>
+         </dependency>
+         <dependency>
+@@ -126,6 +131,12 @@
              <version>4.4.0</version>
              <scope>test</scope>
          </dependency>
@@ -30,7 +40,7 @@ index 8ca3bbe07..aafcdfa8b 100644
          <!-- // KigPaper end -->
      </dependencies>
  
-@@ -178,6 +185,7 @@
+@@ -178,6 +189,7 @@
                              <Specification-Title>Bukkit</Specification-Title>
                              <Specification-Version>${api.version}</Specification-Version>
                              <Specification-Vendor>Bukkit Team</Specification-Vendor>
@@ -380,6 +390,22 @@ index 4a3c90a93..1b6455caf 100644
 +    }
 +    // KigPaper end
  }
+diff --git a/src/main/java/org/bukkit/craftbukkit/Main.java b/src/main/java/org/bukkit/craftbukkit/Main.java
+index c93621919..4c06bd3d6 100644
+--- a/src/main/java/org/bukkit/craftbukkit/Main.java
++++ b/src/main/java/org/bukkit/craftbukkit/Main.java
+@@ -18,6 +18,11 @@ public class Main {
+ 
+     public static void main(String[] args) {
+         // Todo: Installation script
++        // KigPaper start - see https://www.evanjones.ca/java-bytebuffer-leak.html
++        if (System.getProperty("jdk.nio.maxCachedBufferSize") == null) {
++            System.setProperty("jdk.nio.maxCachedBufferSize", "262144");
++        }
++        // KigPaper end
+         OptionParser parser = new OptionParser() {
+             {
+                 acceptsAll(asList("?", "help"), "Show the help");
 diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
 index 6b6c0c1c5..26b936404 100644
 --- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
@@ -423,5 +449,5 @@ index 6b6c0c1c5..26b936404 100644
              }
          } catch (Exception e) {
 -- 
-2.36.1
+2.39.2
 
