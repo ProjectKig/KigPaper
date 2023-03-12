@@ -1,7 +1,7 @@
 ARG git_ref
 FROM ghcr.io/projectkig/kigpaper/kig-paper-builder:${git_ref} AS builder
 
-FROM openjdk:17-alpine
+FROM eclipse-temurin:17-jre-alpine
 RUN apk add --no-cache --update curl ca-certificates openssl git tar bash sqlite fontconfig \
     && adduser --disabled-password --home /home/container container && mkdir -p /home/server/plugins \
     && chown -R container:container /home/server && echo eula=true > eula.txt
