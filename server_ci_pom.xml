@@ -14,6 +14,7 @@
         <junit.version>4.13.2</junit.version>
         <minecraft.version>1.8.8</minecraft.version>
         <minecraft_version>1_8_R3</minecraft_version>
+        <netty.version>4.1.86.Final</netty.version>
         <buildtag.prefix>git-Bukkit-</buildtag.prefix>
         <buildtag.suffix></buildtag.suffix>
         <!--PaperSpigot - Bump to 1.8 - This will haunt me -->
@@ -55,6 +56,10 @@
                 <exclusion>
                     <groupId>org.apache.logging.log4j</groupId>
                     <artifactId>log4j-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-all</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -126,6 +131,12 @@
             <version>4.4.0</version>
             <scope>test</scope>
         </dependency>
+        <!-- KIG: Update Netty -->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>${netty.version}</version>
+        </dependency>
         <!-- // KigPaper end -->
     </dependencies>
 
@@ -189,6 +200,7 @@
                             <Specification-Title>Bukkit</Specification-Title>
                             <Specification-Version>${api.version}</Specification-Version>
                             <Specification-Vendor>Bukkit Team</Specification-Vendor>
+                            <Multi-Release>true</Multi-Release> <!-- KIG: Required for log4j support with Java 11+ -->
                         </manifestEntries>
                         <manifestSections>
                             <manifestSection>
