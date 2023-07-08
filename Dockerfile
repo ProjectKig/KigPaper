@@ -1,10 +1,13 @@
 ARG git_ref
+ARG ARCH
 FROM ghcr.io/projectkig/kigpaper/kig-paper-builder:${git_ref} AS builder
 
-FROM eclipse-temurin:17-jre-alpine
-RUN apk add --no-cache --update curl ca-certificates openssl git tar bash sqlite fontconfig \
+ARG ARCH=linux/amd64
+FROM --platform=${ARCH} eclipse-temurin:17-jre
+RUN apt-get update && apt-get install -y curl ca-certificates openssl git tar bash sqlite fontconfig \
     && adduser --disabled-password --home /home/container container && mkdir -p /home/server/plugins \
-    && chown -R container:container /home/server && echo eula=true > eula.txt
+    && chown -R container:container /home/server && echo eula=true > eula.txt \
+    && rm -rf /var/lib/apt/lists/*
 USER container
 ARG git_ref=master
 ENV USER=container HOME=/home/container KIG_PLATFORM=hotspot
