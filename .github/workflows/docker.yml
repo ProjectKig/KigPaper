@@ -38,39 +38,20 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: docker/build-push-action@v2
         with:
+          platforms: linux/amd64,linux/arm64/v8
           context: .
           push: ${{ github.event_name != 'pull_request' }}
           tags: ghcr.io/projectkig/kigpaper/kig-paper:${{ env.git_ref }}
           build-args: |
             git_ref=${{ env.git_ref }}
-      - name: Create HotSpot image (A64)
-        if: github.event_name != 'pull_request'
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ghcr.io/projectkig/kigpaper/kig-paper:${{ env.git_ref }}-armv8
-          build-args: |
-            git_ref=${{ env.git_ref }}
-            ARCH=linux/arm64/v8
       - name: Create J9 image
         if: github.event_name != 'pull_request'
         uses: docker/build-push-action@v2
         with:
+          platforms: linux/amd64,linux/arm64/v8
           context: .
           file: docker/j9.Dockerfile
           tags: ghcr.io/projectkig/kigpaper/kig-paper:${{ env.git_ref }}_j9
           push: ${{ github.event_name != 'pull_request' }}
           build-args: |
             git_ref=${{ env.git_ref }}
-      - name: Create J9 image (A64)
-        if: github.event_name != 'pull_request'
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: docker/j9.Dockerfile
-          tags: ghcr.io/projectkig/kigpaper/kig-paper:${{ env.git_ref }}_j9-armv8
-          push: ${{ github.event_name != 'pull_request' }}
-          build-args: |
-            git_ref=${{ env.git_ref }}
-            ARCH=linux/arm64/v8

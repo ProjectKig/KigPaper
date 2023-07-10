@@ -1,9 +1,7 @@
 ARG git_ref
-ARG ARCH=linux/amd64
-FROM ghcr.io/projectkig/kigpaper/kig-paper-builder:${git_ref} AS builder
+FROM --platform=linux/amd64 ghcr.io/projectkig/kigpaper/kig-paper-builder:${git_ref} AS builder
 
-ARG ARCH
-FROM --platform=${ARCH} eclipse-temurin:17-jre
+FROM eclipse-temurin:17-jre
 RUN apt-get update && apt-get install -y curl ca-certificates openssl git tar bash sqlite fontconfig \
     && adduser --disabled-password --home /home/container container && mkdir -p /home/server/plugins \
     && chown -R container:container /home/server && echo eula=true > eula.txt \
