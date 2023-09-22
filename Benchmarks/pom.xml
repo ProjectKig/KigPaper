@@ -16,8 +16,8 @@
         <buildtag.prefix>git-Bukkit-</buildtag.prefix>
         <buildtag.suffix></buildtag.suffix>
         <!--PaperSpigot - Bump to 1.8 - This will haunt me -->
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <!-- KigPaper - Java 17 -->
+        <maven.compiler.release>17</maven.compiler.release>
     </properties>
 
     <parent>

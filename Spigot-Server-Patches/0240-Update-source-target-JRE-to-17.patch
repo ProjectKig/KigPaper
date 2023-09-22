@@ -1,0 +1,33 @@
+From daec499e31e88540f117d3b946e920f2aca6e32e Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Fri, 22 Sep 2023 16:43:08 +0200
+Subject: [PATCH] Update source/target JRE to 17
+
+
+diff --git a/pom.xml b/pom.xml
+index a7474d133..18c855f16 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -18,8 +18,8 @@
+         <buildtag.prefix>git-Bukkit-</buildtag.prefix>
+         <buildtag.suffix></buildtag.suffix>
+         <!--PaperSpigot - Bump to 1.8 - This will haunt me -->
+-        <maven.compiler.source>1.8</maven.compiler.source>
+-        <maven.compiler.target>1.8</maven.compiler.target>
++        <!-- KigPaper - Java 17 -->
++        <maven.compiler.release>17</maven.compiler.release>
+     </properties>
+ 
+     <parent>
+@@ -280,7 +280,7 @@
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-compiler-plugin</artifactId>
+                 <!-- versions after this appear to be broken -->
+-                <version>3.1</version>
++                <version>3.11.0</version>
+                 <configuration>
+                     <!-- we use the Eclipse compiler as it doesn't need a JDK -->
+                     <compilerId>eclipse</compilerId>
+-- 
+2.41.0
+
