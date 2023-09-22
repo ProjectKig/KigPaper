@@ -1,0 +1,35 @@
+From 385ddcfeff232beb01c7695eda2725bfed5774bb Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Fri, 22 Sep 2023 17:31:58 +0200
+Subject: [PATCH] Don't use the Eclipse compiler for J17
+
+
+diff --git a/pom.xml b/pom.xml
+index 18c855f16..cb6f3e3d1 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -217,7 +217,7 @@
+             <plugin>
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-shade-plugin</artifactId>
+-                <version>3.2.4</version>
++                <version>3.5.0</version>
+                 <executions>
+                     <execution>
+                         <phase>package</phase>
+@@ -279,12 +279,8 @@
+             <plugin>
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-compiler-plugin</artifactId>
+-                <!-- versions after this appear to be broken -->
+                 <version>3.11.0</version>
+                 <configuration>
+-                    <!-- we use the Eclipse compiler as it doesn't need a JDK -->
+-                    <compilerId>eclipse</compilerId>
+-                    <!-- source and target are ignored if this isn't true -->
+                     <optimize>true</optimize>
+                 </configuration>
+                 <dependencies>
+-- 
+2.41.0
+
