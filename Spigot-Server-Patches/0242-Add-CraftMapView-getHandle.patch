@@ -1,0 +1,23 @@
+From e0840c64e8658a5119a27e42e072201fbca8d885 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Tue, 3 Oct 2023 17:30:40 +0200
+Subject: [PATCH] Add CraftMapView#getHandle
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/map/CraftMapView.java b/src/main/java/org/bukkit/craftbukkit/map/CraftMapView.java
+index 767e8b70c..3bd6d24fa 100644
+--- a/src/main/java/org/bukkit/craftbukkit/map/CraftMapView.java
++++ b/src/main/java/org/bukkit/craftbukkit/map/CraftMapView.java
+@@ -172,4 +172,9 @@ public final class CraftMapView implements MapView {
+         renderCache.clear();
+     }
+     // KigPaper end
++
++    // KigPaper
++    public WorldMap getHandle() {
++        return worldMap;
++    }
+ }
+-- 
+2.41.0
+
