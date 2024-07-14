@@ -1,0 +1,78 @@
+From 9219bd632cfcff6d269a083a00bb20c3f7838c1e Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Sun, 14 Jul 2024 23:18:21 +0200
+Subject: [PATCH] Disable kick for tab complete packet spam
+
+Newer versions send tab complete packets while typing the command/arguments. This also separates the chat/command and tab-complete spam counters so that they don't affect each other.
+
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index b6c35462b..2a045195f 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -83,7 +83,11 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+     private long k;
+     // CraftBukkit start - multithreaded fields
+     private volatile int chatThrottle;
++    // KigPaper start - separate chat and tab spam fields
++    private volatile int tabThrottle;
+     private static final AtomicIntegerFieldUpdater chatSpamField = AtomicIntegerFieldUpdater.newUpdater(PlayerConnection.class, "chatThrottle");
++    private static final AtomicIntegerFieldUpdater tabSpamField = AtomicIntegerFieldUpdater.newUpdater(PlayerConnection.class, "tabThrottle");
++    // KigPaper end
+     // CraftBukkit end
+     private int m;
+     private IntHashMap<Short> n = new IntHashMap();
+@@ -142,6 +146,9 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+         this.minecraftServer.methodProfiler.b();
+         // CraftBukkit start
+         for (int spam; (spam = this.chatThrottle) > 0 && !chatSpamField.compareAndSet(this, spam, spam - 1); ) ;
++        // KigPaper start - separate chat & tab throttle
++        for (int spam; (spam = this.tabThrottle) > 0 && !tabSpamField.compareAndSet(this, spam, spam - 1); ) ;
++        // KigPaper end
+         /* Use thread-safe field access instead
+         if (this.chatThrottle > 0) {
+             --this.chatThrottle;
+@@ -2019,8 +2026,16 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+     public void a(PacketPlayInTabComplete packetplayintabcomplete) {
+         PlayerConnectionUtils.ensureMainThread(packetplayintabcomplete, this, this.player.u());
+         // CraftBukkit start
+-        if (chatSpamField.addAndGet(this, 10) > 500 && !this.minecraftServer.getPlayerList().isOp(this.player.getProfile())) {
+-            this.disconnect("disconnect.spam", DisconnectReason.KICK_SPAM);
++        // KigPaper - separate tab/chat spam
++        // if (chatSpamField.addAndGet(this, 10) > 500 && !this.minecraftServer.getPlayerList().isOp(this.player.getProfile())) {
++        if (tabSpamField.addAndGet(this, 10) > 500 && !this.minecraftServer.getPlayerList().isOp(this.player.getProfile())) {
++            // KigPaper start - disable kick
++            if (PaperSpigotConfig.kickTabCompleteSpam) {
++                this.disconnect("disconnect.spam", DisconnectReason.KICK_SPAM);
++            } else {
++                tabSpamField.set(this, 500);
++            }
++            // KigPaper end
+             return;
+         }
+         // CraftBukkit end
+diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+index 26b936404..5fa3aa5b5 100644
+--- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
++++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+@@ -213,7 +213,8 @@ public class PaperSpigotConfig
+     // KigPaper start
+     public static float knockbackHorizontalMultiplier, knockbackVerticalMultiplier, knockbackHorizontalSprinting, knockbackVerticalSprinting, knockbackFriction;
+     public static boolean betterVehicleHitboxes, nettyReadTimeout, forceConditionalAutoFlush, savePlayerFiles, enableBookDeserialization,
+-            accurateMoveTiming, accurateBlockCollisions, bedMessageActions, kickChatMessageLength, entityExplosionConsistency;
++            accurateMoveTiming, accurateBlockCollisions, bedMessageActions, kickChatMessageLength, entityExplosionConsistency,
++            kickTabCompleteSpam;
+     public static RegionFile.CompressionAlgorithm regionCompressionAlgorithm;
+ 
+     private static void knockbackHorizontalMultiplier() {
+@@ -260,5 +261,8 @@ public class PaperSpigotConfig
+     private static void entityExplosionConsistency() {
+         entityExplosionConsistency = getBoolean("entity-explosion-consistency", true);
+     }
++    private static void kickTabCompleteSpam() {
++        kickTabCompleteSpam = getBoolean("kick-tab-complete-spam", false);
++    }
+     // KigPaper end
+ }
+-- 
+2.45.2
+
