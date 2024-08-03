@@ -1,0 +1,38 @@
+From 688afe76f0045df88c2f7a42949a9793ea840fa4 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Sun, 4 Aug 2024 01:14:04 +0200
+Subject: [PATCH] Do not use removeQueue for sink players
+
+
+diff --git a/src/main/java/dev/rocco/kig/paper/impl/cheetah/SinkEntityPlayer.java b/src/main/java/dev/rocco/kig/paper/impl/cheetah/SinkEntityPlayer.java
+index 2570ac669..932ab813d 100644
+--- a/src/main/java/dev/rocco/kig/paper/impl/cheetah/SinkEntityPlayer.java
++++ b/src/main/java/dev/rocco/kig/paper/impl/cheetah/SinkEntityPlayer.java
+@@ -1,10 +1,7 @@
+ package dev.rocco.kig.paper.impl.cheetah;
+ 
+ import com.mojang.authlib.GameProfile;
+-import net.minecraft.server.EntityPlayer;
+-import net.minecraft.server.PacketPlayOutPlayerInfo;
+-import net.minecraft.server.PlayerInteractManager;
+-import net.minecraft.server.WorldServer;
++import net.minecraft.server.*;
+ import org.bukkit.Location;
+ 
+ import java.nio.ByteBuffer;
+@@ -27,6 +24,12 @@ public class SinkEntityPlayer extends EntityPlayer {
+         setLocation(spawnLoc.getX(), spawnLoc.getY(), spawnLoc.getZ(), 0f, 0f);
+     }
+ 
++    @Override
++    public void d(Entity entity) {
++        // Don't use removeQueue for entity destroy
++        this.playerConnection.sendPacket(new PacketPlayOutEntityDestroy(entity.getId()));
++    }
++
+     Consumer<ByteBuffer> getPacketConsumer() {
+         return packetConsumer;
+     }
+-- 
+2.45.2
+
