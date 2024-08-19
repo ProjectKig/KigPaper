@@ -1,0 +1,53 @@
+From 734f1e9fe94209b1b033fff4b694460d5d46a64f Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Mon, 19 Aug 2024 05:47:17 +0200
+Subject: [PATCH] Do not call onPlace when block physics are off
+
+
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 4bf3c09e8..b8807f512 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -362,10 +362,11 @@ public abstract class World implements IBlockAccess {
+ 
+     // KigPaper start
+     public boolean setTypeAndData(BlockPosition blockposition, IBlockData iblockdata, int i) {
+-        return this.setTypeAndData(blockposition, iblockdata, i, true);
++        return this.setTypeAndData(blockposition, iblockdata, i, true, true);
+     }
+ 
+-    public boolean setTypeAndData(BlockPosition blockposition, IBlockData iblockdata, int i, boolean updateLight) { // KigPaper end - add updateLight param
++    public boolean setTypeAndData(BlockPosition blockposition, IBlockData iblockdata, int i, boolean updateLight, boolean placeCallbacks) {
++        // KigPaper end - add updateLight, placeCallback params
+         // CraftBukkit start - tree generation
+         if (this.captureTreeGeneration) {
+             BlockState blockstate = null;
+@@ -403,7 +404,8 @@ public abstract class World implements IBlockAccess {
+             }
+             // CraftBukkit end
+ 
+-            IBlockData iblockdata1 = chunk.a(blockposition, iblockdata, updateLight); // KigPaper - add updateLight
++            // KigPaper - add updateLight, placeCallbacks
++            IBlockData iblockdata1 = chunk.setBlock(blockposition, iblockdata, updateLight, placeCallbacks);
+ 
+             if (iblockdata1 == null) {
+                 // CraftBukkit start - remove blockstate if failed
+diff --git a/src/main/java/org/bukkit/craftbukkit/block/CraftBlock.java b/src/main/java/org/bukkit/craftbukkit/block/CraftBlock.java
+index c7390e0c6..587810e8d 100644
+--- a/src/main/java/org/bukkit/craftbukkit/block/CraftBlock.java
++++ b/src/main/java/org/bukkit/craftbukkit/block/CraftBlock.java
+@@ -134,9 +134,9 @@ public class CraftBlock implements Block {
+         IBlockData blockData = getNMSBlock(type).fromLegacyData(data);
+         BlockPosition position = new BlockPosition(x, y, z);
+         if (applyPhysics) {
+-            return chunk.getHandle().getWorld().setTypeAndData(position, blockData, 3, updateLight);
++            return chunk.getHandle().getWorld().setTypeAndData(position, blockData, 3, updateLight, true);
+         } else {
+-            boolean success = chunk.getHandle().getWorld().setTypeAndData(position, blockData, 2, updateLight);
++            boolean success = chunk.getHandle().getWorld().setTypeAndData(position, blockData, 2, updateLight, false);
+             if (success) {
+                 chunk.getHandle().getWorld().notify(position);
+             }
+-- 
+2.45.2
+
