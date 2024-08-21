@@ -1,0 +1,26 @@
+From eeb3078809c87cf793e1146bd815936a4e88f024 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Wed, 21 Aug 2024 05:38:07 +0200
+Subject: [PATCH] Send ping and game mode updates to sink players
+
+
+diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
+index 762f9d24b..fb35d62db 100644
+--- a/src/main/java/net/minecraft/server/PlayerList.java
++++ b/src/main/java/net/minecraft/server/PlayerList.java
+@@ -929,6 +929,12 @@ public abstract class PlayerList {
+             }
+             recipient.playerConnection.sendPacket(packet.cloneFor(recipient));
+         }
++        // Sink players
++        for (WorldServer world : this.server.worlds) {
++            for (EntityPlayer player : world.sinkPlayers.values()) {
++                player.playerConnection.sendPacket(packet.cloneFor(player));
++            }
++        }
+     }
+     // KigPaper end
+ 
+-- 
+2.45.2
+
