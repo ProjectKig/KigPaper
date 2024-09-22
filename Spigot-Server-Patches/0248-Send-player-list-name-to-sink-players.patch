@@ -1,0 +1,26 @@
+From 4c43597f381f31e07c3987930080088847bd4900 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Mon, 23 Sep 2024 00:46:10 +0200
+Subject: [PATCH] Send player list name to sink players
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index 582d7aa64..81b35e905 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -285,6 +285,12 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+                 player.playerConnection.sendPacket(packet.cloneFor(player)); // KigPaper - add cloneFor
+             }
+         }
++        // KigPaper - sink players
++        if (getHandle().world instanceof WorldServer) {
++            for (EntityPlayer player : ((WorldServer) getHandle().world).sinkPlayers.values()) {
++                player.playerConnection.sendPacket(packet.cloneFor(player));
++            }
++        }
+     }
+ 
+     // KigPaper start
+-- 
+2.45.2
+
