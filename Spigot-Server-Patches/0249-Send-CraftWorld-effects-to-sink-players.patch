@@ -1,0 +1,25 @@
+From c1e91f9d889df8933e22f0e488591dfb34e45e77 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Tue, 8 Oct 2024 00:15:34 +0200
+Subject: [PATCH] Send CraftWorld effects to sink players
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+index 0f218a04..76e8e593 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+@@ -1543,6 +1543,11 @@ public class CraftWorld implements World {
+                     ( (CraftPlayer) player ).getHandle().playerConnection.sendPacket( packet );
+                 }
+             }
++            // KigPaper start - sink players
++            for (EntityPlayer player : getHandle().sinkPlayers.values()) {
++                player.playerConnection.sendPacket(packet);
++            }
++            // KigPaper end
+         }
+ 
+         @Override
+-- 
+2.46.1
+
