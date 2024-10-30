@@ -1,0 +1,27 @@
+From b804bdf9a999926b31ec83bd34045620f2c45fd7 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Thu, 31 Oct 2024 00:15:59 +0100
+Subject: [PATCH] Send time updates to sink players
+
+
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 2c590403..9db37af2 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -808,6 +808,13 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
+                 EntityPlayer entityplayer = (EntityPlayer) this.getPlayerList().players.get(i);
+                 entityplayer.playerConnection.sendPacket(new PacketPlayOutUpdateTime(entityplayer.world.getTime(), entityplayer.getPlayerTime(), entityplayer.world.getGameRules().getBoolean("doDaylightCycle"))); // Add support for per player time
+             }
++            // KigPaper - sink players
++            for (WorldServer world : worlds) {
++                boolean rule = world.getGameRules().getBoolean("doDaylightCycle");
++                for (EntityPlayer player : world.sinkPlayers.values()) {
++                    player.playerConnection.sendPacket(new PacketPlayOutUpdateTime(world.getTime(), world.getDayTime(), rule));
++                }
++            }
+         }
+         SpigotTimings.timeUpdateTimer.stopTiming(); // Spigot
+ 
+-- 
+2.46.2
+
