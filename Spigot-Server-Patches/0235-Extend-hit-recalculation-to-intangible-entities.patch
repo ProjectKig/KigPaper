@@ -21,7 +21,8 @@ index 1aa0d226..b6c35462 100644
          if (entity != null) {
 -            // KigPaper start - allow hitting the vehicle when hitboxes collide / allow the player to hit others if they are being ridden by something
 +            // KigPaper start - recalculate hit when hitboxes collide
-             if(PaperSpigotConfig.betterVehicleHitboxes) {
+-            if(PaperSpigotConfig.betterVehicleHitboxes) {
++            if (PaperSpigotConfig.betterVehicleHitboxes && packetplayinuseentity.a() == PacketPlayInUseEntity.EnumEntityUseAction.ATTACK) {
 -                if (entity instanceof EntityPlayer && entity.vehicle != null && !((EntityPlayer) entity).collidesWithEntities) {
 +                Predicate<? super Entity> recalcHitPredicate = null;
 +                if (entity == player.passenger) {
