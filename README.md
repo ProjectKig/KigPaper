@@ -36,3 +36,17 @@ All patches (including the ones from the original Spigot and Paper) are licensed
 This project includes some patches from:
 + [SportPaper](https://github.com/Electroid/SportPaper)
 + [FlamePaper](https://github.com/2lstudios-mc/FlamePaper)
+
+![YourKit](https://www.yourkit.com/images/yklogo.png)
+
+YourKit supports open source projects with innovative and intelligent tools
+for monitoring and profiling Java and .NET applications.  
+YourKit is the creator of [YourKit Java Profiler](https://www.yourkit.com/java/profiler/),
+[YourKit .NET Profiler](https://www.yourkit.com/.net/profiler/),
+and [YourKit YouMonitor](https://www.yourkit.com/youmonitor/).  
+
+[![Hetzner](https://cdn.hetzner.com/assets/Uploads/green-electricity-logo_en.png)](https://hetzner.cloud/?ref=Y6g3aawsNItB)
+
+Our production servers run on [Hetzner Cloud](https://hetzner.cloud/?ref=Y6g3aawsNItB), use our 
+[affiliate link](https://hetzner.cloud/?ref=Y6g3aawsNItB) to get €20 credit!
+KigPaper also works on the cost-effective ARM64 cloud options.
