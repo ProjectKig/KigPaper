@@ -1,0 +1,25 @@
+From c591d99a9fcd16a17cb7c103542aee6c81de889e Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Tue, 15 Apr 2025 21:00:48 +0200
+Subject: [PATCH] Upgrade to Java 21, upgrade Netty to 4.2.0.Final
+
+
+diff --git a/pom.xml b/pom.xml
+index 80076c6f..872732df 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -20,9 +20,9 @@
+ 
+     <properties>
+         <!--PaperSpigot - Bump to 1.8 - This will haunt me -->
+-        <!-- KigPaper - Java 17 -->
++        <!-- KigPaper - Java 21 -->
+         <additionalparam>-Xdoclint:none</additionalparam>
+-        <maven.compiler.release>17</maven.compiler.release>
++        <maven.compiler.release>21</maven.compiler.release>
+         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     </properties>
+ 
+-- 
+2.48.1
+

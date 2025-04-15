@@ -1,0 +1,38 @@
+From 8ebf84f1d2c2b8d03261a3510681fb40df5309b1 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Tue, 15 Apr 2025 21:00:48 +0200
+Subject: [PATCH] Upgrade to Java 21, upgrade Netty to 4.2.0.Final
+
+
+diff --git a/pom.xml b/pom.xml
+index cb6f3e3d1..3c615f489 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -14,12 +14,12 @@
+         <junit.version>4.13.2</junit.version>
+         <minecraft.version>1.8.8</minecraft.version>
+         <minecraft_version>1_8_R3</minecraft_version>
+-        <netty.version>4.1.86.Final</netty.version>
++        <netty.version>4.2.0.Final</netty.version>
+         <buildtag.prefix>git-Bukkit-</buildtag.prefix>
+         <buildtag.suffix></buildtag.suffix>
+         <!--PaperSpigot - Bump to 1.8 - This will haunt me -->
+-        <!-- KigPaper - Java 17 -->
+-        <maven.compiler.release>17</maven.compiler.release>
++        <!-- KigPaper - Java 21 -->
++        <maven.compiler.release>21</maven.compiler.release>
+     </properties>
+ 
+     <parent>
+@@ -262,7 +262,7 @@
+             <plugin>
+                 <groupId>net.md-5</groupId>
+                 <artifactId>specialsource-maven-plugin</artifactId>
+-                <version>1.2.3</version>
++                <version>2.0.4</version>
+                 <executions>
+                     <execution>
+                         <phase>package</phase>
+-- 
+2.48.1
+
