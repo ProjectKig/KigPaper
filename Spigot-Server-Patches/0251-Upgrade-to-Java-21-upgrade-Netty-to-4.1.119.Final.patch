@@ -1,11 +1,11 @@
-From 8ebf84f1d2c2b8d03261a3510681fb40df5309b1 Mon Sep 17 00:00:00 2001
+From c23ead22e18a64f9586648f06598be3e24612258 Mon Sep 17 00:00:00 2001
 From: RoccoDev <hey@rocco.dev>
 Date: Tue, 15 Apr 2025 21:00:48 +0200
-Subject: [PATCH] Upgrade to Java 21, upgrade Netty to 4.2.0.Final
+Subject: [PATCH] Upgrade to Java 21, upgrade Netty to 4.1.119.Final
 
 
 diff --git a/pom.xml b/pom.xml
-index cb6f3e3d1..3c615f489 100644
+index cb6f3e3d1..b930af099 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -14,12 +14,12 @@
@@ -13,7 +13,7 @@ index cb6f3e3d1..3c615f489 100644
          <minecraft.version>1.8.8</minecraft.version>
          <minecraft_version>1_8_R3</minecraft_version>
 -        <netty.version>4.1.86.Final</netty.version>
-+        <netty.version>4.2.0.Final</netty.version>
++        <netty.version>4.1.119.Final</netty.version>
          <buildtag.prefix>git-Bukkit-</buildtag.prefix>
          <buildtag.suffix></buildtag.suffix>
          <!--PaperSpigot - Bump to 1.8 - This will haunt me -->
