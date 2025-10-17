@@ -1,0 +1,45 @@
+From a78e3f3a650b05f6babce1e7114337057d5a30db Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Fri, 17 Oct 2025 05:43:01 +0200
+Subject: [PATCH] Make combat line of sight check configurable
+
+
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index faee58d45..c17812626 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -1393,7 +1393,8 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+                 }
+             }
+             // KigPaper end
+-            boolean flag = this.player.hasLineOfSight(entity);
++            // KigPaper - make configurable
++            boolean flag = !PaperSpigotConfig.combatLineOfSightCheck || this.player.hasLineOfSight(entity);
+             double d0 = 36.0D;
+ 
+             if (!flag) {
+diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+index 5fa3aa5b5..d99ace156 100644
+--- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
++++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+@@ -214,7 +214,7 @@ public class PaperSpigotConfig
+     public static float knockbackHorizontalMultiplier, knockbackVerticalMultiplier, knockbackHorizontalSprinting, knockbackVerticalSprinting, knockbackFriction;
+     public static boolean betterVehicleHitboxes, nettyReadTimeout, forceConditionalAutoFlush, savePlayerFiles, enableBookDeserialization,
+             accurateMoveTiming, accurateBlockCollisions, bedMessageActions, kickChatMessageLength, entityExplosionConsistency,
+-            kickTabCompleteSpam;
++            kickTabCompleteSpam, combatLineOfSightCheck;
+     public static RegionFile.CompressionAlgorithm regionCompressionAlgorithm;
+ 
+     private static void knockbackHorizontalMultiplier() {
+@@ -264,5 +264,8 @@ public class PaperSpigotConfig
+     private static void kickTabCompleteSpam() {
+         kickTabCompleteSpam = getBoolean("kick-tab-complete-spam", false);
+     }
++    private static void combatLineOfSightCheck() {
++        combatLineOfSightCheck = getBoolean("combat-line-of-sight-check", true);
++    }
+     // KigPaper end
+ }
+-- 
+2.51.0
+
