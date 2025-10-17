@@ -45,8 +45,8 @@
 
     <repositories>
         <repository>
-            <id>md_5-releases</id>
-            <url>https://repo.md-5.net/content/repositories/releases/</url>
+            <id>roccodev-snapshots</id>
+            <url>https://repo.rocco.dev/repository/snapshots/</url>
         </repository>
     </repositories>
 
