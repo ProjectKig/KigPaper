@@ -1,0 +1,66 @@
+From f7a35cf09165c45026d5637261c8162fb9a5de5a Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Wed, 12 Nov 2025 22:25:19 +0100
+Subject: [PATCH] Only skip interact event for same position and item
+
+Fixes SPIGOT-5794.
+
+When recalculating an 'air interact with item' interaction to ray trace for blocks,
+the event would not be fired again if the player's last interaction was with a block, and the ray landed on a different block.
+Instead, the cancel state of the last event would be used again.
+
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index c17812626..ee484c88c 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -745,13 +745,18 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+                 org.bukkit.event.player.PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(this.player, Action.RIGHT_CLICK_AIR, itemstack);
+                 cancelled = event.useItemInHand() == Event.Result.DENY;
+             } else {
+-                if (player.playerInteractManager.firedInteract) {
+-                    player.playerInteractManager.firedInteract = false;
+-                    cancelled = player.playerInteractManager.interactResult;
++                // KigPaper - SPIGOT-5794: add block & item stack checks
++                PlayerInteractManager interactManager = player.playerInteractManager;
++                if (interactManager.firedInteract && interactManager.interactPosition.equals(movingobjectposition.a())
++                        && ItemStack.equals(interactManager.interactItemStack, itemstack)) {
++                    cancelled = interactManager.interactResult;
++                    // KigPaper - move down
++                    // interactManager.firedInteract = false;
+                 } else {
+                     org.bukkit.event.player.PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK, movingobjectposition.a(), movingobjectposition.direction, itemstack, true);
+                     cancelled = event.useItemInHand() == Event.Result.DENY;
+                 }
++                interactManager.firedInteract = false;
+             }
+ 
+             if (!cancelled) {
+diff --git a/src/main/java/net/minecraft/server/PlayerInteractManager.java b/src/main/java/net/minecraft/server/PlayerInteractManager.java
+index 6f6c1a2ef..f9a4a0d79 100644
+--- a/src/main/java/net/minecraft/server/PlayerInteractManager.java
++++ b/src/main/java/net/minecraft/server/PlayerInteractManager.java
+@@ -397,6 +397,10 @@ public class PlayerInteractManager {
+     // CraftBukkit start
+     public boolean interactResult = false;
+     public boolean firedInteract = false;
++    // KigPaper start - SPIGOT-5794
++    public BlockPosition interactPosition;
++    public ItemStack interactItemStack;
++    // KigPaper end
+     // CraftBukkit end
+ 
+     public boolean interact(EntityHuman entityhuman, World world, ItemStack itemstack, BlockPosition blockposition, EnumDirection enumdirection, float f, float f1, float f2) {
+@@ -463,6 +467,10 @@ public class PlayerInteractManager {
+             PlayerInteractEvent event = CraftEventFactory.callPlayerInteractEvent(entityhuman, Action.RIGHT_CLICK_BLOCK, blockposition, enumdirection, itemstack, cancelledBlock);
+             firedInteract = true;
+             interactResult = event.useItemInHand() == Event.Result.DENY;
++            // KigPaper start
++            interactPosition = new BlockPosition(blockposition);
++            interactItemStack = itemstack != null ? itemstack.cloneItemStack() : null;
++            // KigPaper end
+ 
+             if (event.useInteractedBlock() == Event.Result.DENY) {
+                 // If we denied a door from opening, we need to send a correcting update to the client, as it already opened the door.
+-- 
+2.51.0
+
