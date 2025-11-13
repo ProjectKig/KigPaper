@@ -1,0 +1,124 @@
+From abc7d64689dfd4c24b07fde97f2568157c6bfef1 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Thu, 13 Nov 2025 09:00:39 +0100
+Subject: [PATCH] Apply item attributes on slot change
+
+Fixes MC-28289
+
+Previously, held item attributes would only be updated at the end of the tick, meaning subsequent actions (like attacks) sent in the same tick would use the attributes of the old selected item.
+
+Notably, this would often cause swords to deal punch damage when switching and quickly attacking.
+
+The fix updates attributes immediately on slot change, while still deferring equipment tracker broadcasts until the end of the tick.
+
+diff --git a/src/main/java/net/minecraft/server/EntityLiving.java b/src/main/java/net/minecraft/server/EntityLiving.java
+index 60f901702..1d7f37fc6 100644
+--- a/src/main/java/net/minecraft/server/EntityLiving.java
++++ b/src/main/java/net/minecraft/server/EntityLiving.java
+@@ -17,7 +17,6 @@ import com.google.common.collect.Lists;
+ import dev.rocco.kig.paper.api.velocity.KnockbackValues;
+ import org.bukkit.craftbukkit.event.CraftEventFactory;
+ import org.bukkit.entity.LivingEntity;
+-import org.bukkit.entity.Player;
+ import org.bukkit.entity.Vehicle;
+ import org.bukkit.event.entity.EntityDamageEvent;
+ import org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
+@@ -1476,23 +1475,8 @@ public abstract class EntityLiving extends Entity {
+                 }
+             }
+ 
+-            for (int j = 0; j < 5; ++j) {
+-                ItemStack itemstack = this.h[j];
+-                ItemStack itemstack1 = this.getEquipment(j);
+-
+-                if (!ItemStack.matches(itemstack1, itemstack)) {
+-                    ((WorldServer) this.world).getTracker().a((Entity) this, (Packet) (new PacketPlayOutEntityEquipment(this.getId(), j, itemstack1)));
+-                    if (itemstack != null) {
+-                        this.c.a(itemstack.B());
+-                    }
+-
+-                    if (itemstack1 != null) {
+-                        this.c.b(itemstack1.B());
+-                    }
+-
+-                    this.h[j] = itemstack1 == null ? null : itemstack1.cloneItemStack();
+-                }
+-            }
++            // KigPaper
++            syncEquipment(true);
+ 
+             if (this.ticksLived % 20 == 0) {
+                 this.bs().g();
+@@ -1566,6 +1550,32 @@ public abstract class EntityLiving extends Entity {
+         this.aT += f2;
+     }
+ 
++    // KigPaper start
++    private byte equipmentNeedsTrackerUpdate;
++    public void syncEquipment(boolean updateTracker) {
++        for (int j = 0; j < 5; ++j) {
++            byte mask = (byte) (1 << j);
++            ItemStack oldItem = this.h[j];
++            ItemStack newItem = this.getEquipment(j);
++            boolean diffItem = !ItemStack.matches(newItem, oldItem);
++            if (diffItem) {
++                if (oldItem != null) {
++                    this.c.a(oldItem.B());
++                }
++                if (newItem != null) {
++                    this.c.b(newItem.B());
++                }
++                this.h[j] = newItem == null ? null : newItem.cloneItemStack();
++                equipmentNeedsTrackerUpdate |= mask;
++            }
++            if (updateTracker && (equipmentNeedsTrackerUpdate & mask) != 0) {
++                ((WorldServer) this.world).getTracker().a(this, new PacketPlayOutEntityEquipment(this.getId(), j, newItem));
++                equipmentNeedsTrackerUpdate &= (byte) ~mask;
++            }
++        }
++    }
++    // KigPaper end
++
+     protected float h(float f, float f1) {
+         float f2 = MathHelper.g(f - this.aI);
+ 
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index ee484c88c..eb4699048 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -979,6 +979,10 @@ public class PlayerConnection implements PacketListenerPlayIn, IUpdatePlayerList
+             // CraftBukkit end
+             this.player.inventory.itemInHandIndex = packetplayinhelditemslot.a();
+             this.player.resetIdleTimer();
++            // KigPaper
++            if (PaperSpigotConfig.attributesOnSlotChange) {
++                this.player.syncEquipment(false);
++            }
+         } else {
+             PlayerConnection.c.warn(this.player.getName() + " tried to set an invalid carried item");
+             this.disconnect("Invalid hotbar selection (Hacking?)", DisconnectReason.KICK_BAD_PACKET); // CraftBukkit //Spigot "Nope" -> Descriptive reason
+diff --git a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+index d99ace156..5d1b3eb49 100644
+--- a/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
++++ b/src/main/java/org/github/paperspigot/PaperSpigotConfig.java
+@@ -214,7 +214,7 @@ public class PaperSpigotConfig
+     public static float knockbackHorizontalMultiplier, knockbackVerticalMultiplier, knockbackHorizontalSprinting, knockbackVerticalSprinting, knockbackFriction;
+     public static boolean betterVehicleHitboxes, nettyReadTimeout, forceConditionalAutoFlush, savePlayerFiles, enableBookDeserialization,
+             accurateMoveTiming, accurateBlockCollisions, bedMessageActions, kickChatMessageLength, entityExplosionConsistency,
+-            kickTabCompleteSpam, combatLineOfSightCheck;
++            kickTabCompleteSpam, combatLineOfSightCheck, attributesOnSlotChange;
+     public static RegionFile.CompressionAlgorithm regionCompressionAlgorithm;
+ 
+     private static void knockbackHorizontalMultiplier() {
+@@ -267,5 +267,8 @@ public class PaperSpigotConfig
+     private static void combatLineOfSightCheck() {
+         combatLineOfSightCheck = getBoolean("combat-line-of-sight-check", true);
+     }
++    private static void attributesOnSlotChange() {
++        attributesOnSlotChange = getBoolean("attributes-on-slot-change", true);
++    }
+     // KigPaper end
+ }
+-- 
+2.51.0
+
