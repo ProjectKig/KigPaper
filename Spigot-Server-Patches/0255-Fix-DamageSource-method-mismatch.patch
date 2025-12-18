@@ -1,0 +1,24 @@
+From 6faea0889083038bec8527da46199e4aab9de438 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Thu, 18 Dec 2025 03:44:32 +0100
+Subject: [PATCH] Fix DamageSource method mismatch
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/CraftDamageSource.java b/src/main/java/org/bukkit/craftbukkit/util/CraftDamageSource.java
+index a8e2b5e20..0380e0b46 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/CraftDamageSource.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/CraftDamageSource.java
+@@ -18,8 +18,8 @@ public final class CraftDamageSource extends DamageSource {
+         }
+ 
+         // Check fire
+-        if (original.isExplosion()) {
+-            newSource.setExplosion();
++        if (original.isBurn()) {
++            newSource.setBurn();
+         }
+ 
+         return newSource;
+-- 
+2.52.0
+
