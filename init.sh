@@ -21,7 +21,9 @@ mkdir -p $cb
 for file in nms-patches/* "$basedir"/nms-patches/*
 do
     patchFile="$file"
-    file="$(echo "$file" | rev | cut -d/ -f1 | rev | cut -d. -f1).java"
+    filename="${file##*/}"
+    filename="${filename%.*}"
+    file="$filename.java"
 
     echo "Patching $file < $patchFile"
     sed -i 's/\r//' "$nms/$file" > /dev/null
