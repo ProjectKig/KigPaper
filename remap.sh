@@ -37,15 +37,14 @@ fi
 # KigPaper start - Remove log4j & other deps from vanilla jar
 echo "KIG: Removing dependencies..."
 if [ ! -f "$jarpath-kig-nodeps.jar" ]; then
-    cp "$jarpath.jar" "$jarpath-kig-nodeps.jar" 1>/dev/null
     mkdir -p "$workdir/tmp_kig"
     (
         cd "$workdir/tmp_kig"
         jar xf "$jarpath.jar"
-        rm -rf org/apache/logging/log4j io/netty META-INF/io.netty.*
+        rm -r org/apache/logging/log4j io/netty META-INF/io.netty.*
         jar cf "$jarpath-kig-nodeps.jar" .
     )
-    rm -rf "$workdir/tmp_kig"
+    rm -r "$workdir/tmp_kig"
     echo "KIG: Removed dependencies from vanilla jar. Make sure to have them in pom.xml!"
 fi
 # KigPaper end
