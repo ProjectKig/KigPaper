@@ -1,132 +1,60 @@
-From 6933717273a35a293eeef9a0259ed10b1cc14c77 Mon Sep 17 00:00:00 2001
+From 4c047c71642425ee68ef92da18ca04692a0a3417 Mon Sep 17 00:00:00 2001
 From: Vanolex <vanolex@vanolex.net>
-Date: Mon, 19 Jan 2026 23:49:10 +0100
+Date: Wed, 21 Jan 2026 01:33:51 +0100
 Subject: [PATCH] Better-ProjectileHitEvent-API
 
 
 diff --git a/src/main/java/net/minecraft/server/EntityArrow.java b/src/main/java/net/minecraft/server/EntityArrow.java
-index 78bb8bfbe..f86e1adc7 100644
+index 78bb8bfbe..eab1b7550 100644
 --- a/src/main/java/net/minecraft/server/EntityArrow.java
 +++ b/src/main/java/net/minecraft/server/EntityArrow.java
-@@ -1,9 +1,11 @@
+@@ -1,9 +1,10 @@
  package net.minecraft.server;
  
  import dev.rocco.kig.paper.api.event.PlayerCheckCriticalEvent;
 -import dev.rocco.kig.paper.api.event.ProjectileCollideEvent;
-+import dev.rocco.kig.paper.api.event.ProjectileHitBlockEvent;
-+import dev.rocco.kig.paper.api.event.ProjectileHitEntityEvent;
++import dev.rocco.kig.paper.api.event.ProjectilePreHitEvent;
  import dev.rocco.kig.paper.api.particle.ProjectileEffect;
  import org.bukkit.Location;
 +import org.bukkit.craftbukkit.event.CraftEventFactory;
  import org.bukkit.entity.LivingEntity;
  import org.bukkit.entity.Player;
  import org.bukkit.event.entity.EntityCombustByEntityEvent;
-@@ -15,6 +17,8 @@ import java.util.List;
- // CraftBukkit end
+@@ -153,6 +154,9 @@ public class EntityArrow extends Entity implements IProjectile {
  
- public class EntityArrow extends Entity implements IProjectile {
-+    private final double BBGROW = 0.3; // KigPaper - magic number, bounding box grow
-+    private IBlockData hitBlockData; // KigPaper - store hit block data before event call
- 
-     private int d = -1;
-     private int e = -1;
-@@ -151,6 +155,49 @@ public class EntityArrow extends Entity implements IProjectile {
-         this.ar = 0;
-     }
- 
-+    // KigPaper start - move raytracing & event handling to separate function
-+    public MovingObjectPosition getHitResult(Vec3D start, Vec3D end) {
-+        MovingObjectPosition movingobjectposition = this.world.rayTrace(start, end);
-+
-+        if (movingobjectposition != null) {
-+            end = new Vec3D(movingobjectposition.pos.a, movingobjectposition.pos.b, movingobjectposition.pos.c);
-+        }
-+
-+        Entity hitCandidate = null;
-+        List<Entity> list = this.world.getEntities(this, this.getBoundingBox().a(this.motX, this.motY, this.motZ).grow(1.0D, 1.0D, 1.0D));
-+        double closestHit = Double.MAX_VALUE;
-+        EntityLiving entityliving = (EntityLiving) shooter;
-+
-+        AxisAlignedBB axisalignedbb;
-+        MovingObjectPosition movingobjectposition1;
-+        for (Entity ent : list) {
-+            if ((this.ar < 5 && ent == entityliving) || !ent.ad()) continue;
-+            axisalignedbb = ent.getBoundingBox().grow(BBGROW, BBGROW, BBGROW);
-+            movingobjectposition1 = axisalignedbb.a(start, end);
-+
-+            if (movingobjectposition1 == null) continue;
-+
-+            double dist = start.distanceSquared(movingobjectposition1.pos);
-+
-+            if (closestHit < dist) continue;
-+            closestHit = dist;
-+            hitCandidate = ent;
-+        }
-+
-+        if (hitCandidate != null) {
-+            ProjectileHitEntityEvent event = CraftEventFactory.callProjectileCollideEvent(this, hitCandidate);
-+            return event.isCancelled() ? null : new MovingObjectPosition(hitCandidate);
-+        }
-+
-+        if (movingobjectposition == null) return null;
-+
-+        this.hitBlockData = this.world.getType(movingobjectposition.a());
-+
-+        ProjectileHitBlockEvent event = CraftEventFactory.callProjectileHitBlockEvent(this, movingobjectposition);
-+        return event.isCancelled() ? null : movingobjectposition;
-+    }
-+    // KigPaper end
-+
      public void t_() {
          super.t_();
++
++        IBlockData hitBlockData = null; // KigPaper
++
          if (this.lastPitch == 0.0F && this.lastYaw == 0.0F) {
-@@ -198,43 +245,9 @@ public class EntityArrow extends Entity implements IProjectile {
-             ++this.as;
-             Vec3D vec3d = new Vec3D(this.locX, this.locY, this.locZ);
-             Vec3D vec3d1 = new Vec3D(this.locX + this.motX, this.locY + this.motY, this.locZ + this.motZ);
--            MovingObjectPosition movingobjectposition = this.world.rayTrace(vec3d, vec3d1, false, true, false);
+             float f = MathHelper.sqrt(this.motX * this.motX + this.motZ * this.motZ);
  
--            vec3d = new Vec3D(this.locX, this.locY, this.locZ);
--            vec3d1 = new Vec3D(this.locX + this.motX, this.locY + this.motY, this.locZ + this.motZ);
--            if (movingobjectposition != null) {
--                vec3d1 = new Vec3D(movingobjectposition.pos.a, movingobjectposition.pos.b, movingobjectposition.pos.c);
--            }
--
--            Entity entity = null;
--            List list = this.world.getEntities(this, this.getBoundingBox().a(this.motX, this.motY, this.motZ).grow(1.0D, 1.0D, 1.0D));
--            double d0 = 0.0D;
--
--            int j;
--            float f1;
--
--            for (j = 0; j < list.size(); ++j) {
--                Entity entity1 = (Entity) list.get(j);
--
--                if (entity1.ad() && (entity1 != this.shooter || this.as >= 5)) {
--                    f1 = 0.3F;
--                    AxisAlignedBB axisalignedbb1 = entity1.getBoundingBox().grow((double) f1, (double) f1, (double) f1);
--                    MovingObjectPosition movingobjectposition1 = axisalignedbb1.a(vec3d, vec3d1);
--
--                    if (movingobjectposition1 != null) {
--                        double d1 = vec3d.distanceSquared(movingobjectposition1.pos);
--
--                        if (d1 < d0 || d0 == 0.0D) {
--                            entity = entity1;
--                            d0 = d1;
--                        }
--                    }
--                }
--            }
--
--            if (entity != null) {
+@@ -232,9 +236,22 @@ public class EntityArrow extends Entity implements IProjectile {
+                 }
+             }
+ 
++            ProjectilePreHitEvent event1; // KigPaper
++
+             if (entity != null) {
 -                movingobjectposition = new MovingObjectPosition(entity);
--            }
-+            MovingObjectPosition movingobjectposition = getHitResult(vec3d, vec3d1); // KigPaper - move collision & event logic to function
-+            float f1; // KigPaper - variable initialised in moved code and used here later
++                // KigPaper start
++                event1 = CraftEventFactory.callProjectileCollideEvent(this, entity);
++                if (!event1.isCancelled()) movingobjectposition = new MovingObjectPosition(entity);
++                // KigPaper end
++            }
++
++            // KigPaper start
++            if (movingobjectposition != null && movingobjectposition.entity == null) {
++                hitBlockData = this.world.getType(movingobjectposition.a());
++                event1 = CraftEventFactory.callProjectilePreHitBlockEvent(this, movingobjectposition);
++                if (event1.isCancelled()) movingobjectposition = null;
+             }
++            // KigPaper end
  
              if (movingobjectposition != null && movingobjectposition.entity != null && movingobjectposition.entity instanceof EntityHuman) {
                  EntityHuman entityhuman = (EntityHuman) movingobjectposition.entity;
-@@ -260,15 +273,10 @@ public class EntityArrow extends Entity implements IProjectile {
+@@ -260,12 +277,7 @@ public class EntityArrow extends Entity implements IProjectile {
              // KigPaper end
              // PaperSpigot end
  
@@ -139,275 +67,105 @@ index 78bb8bfbe..f86e1adc7 100644
 +            // KigPaper - moved ProjectileCollideEvent
  
              if (movingobjectposition != null) {
--                org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileHitEvent(this); // CraftBukkit - Call event
-+                // KigPaper - moved ProjectileHitEvent call
-                 if (movingobjectposition.entity != null) {
-                     f2 = MathHelper.sqrt(this.motX * this.motX + this.motY * this.motY + this.motZ * this.motZ);
-                     int k = MathHelper.f((double) f2 * this.damage);
-@@ -301,7 +309,7 @@ public class EntityArrow extends Entity implements IProjectile {
-                     // CraftBukkit start - Moved damage call
-                     if (movingobjectposition.entity.damageEntity(damagesource, (float) k)) {
-                     if (this.isBurning() && !(movingobjectposition.entity instanceof EntityEnderman) && (!(movingobjectposition.entity instanceof EntityPlayer) || !(this.shooter instanceof EntityPlayer) || this.world.pvpMode)) { // CraftBukkit - abide by pvp setting if destination is a player
--                        EntityCombustByEntityEvent combustEvent = new EntityCombustByEntityEvent(this.getBukkitEntity(), entity.getBukkitEntity(), 5);
-+                        EntityCombustByEntityEvent combustEvent = new EntityCombustByEntityEvent(this.getBukkitEntity(), movingobjectposition.entity.getBukkitEntity(), 5); // KigPaper - replaced removed enitiy variable with movingobjectposition.entity
-                         org.bukkit.Bukkit.getPluginManager().callEvent(combustEvent);
-                         if (!combustEvent.isCancelled()) {
-                             movingobjectposition.entity.setOnFire(combustEvent.getDuration());
-@@ -357,7 +365,9 @@ public class EntityArrow extends Entity implements IProjectile {
+                 org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileHitEvent(this); // CraftBukkit - Call event
+@@ -357,7 +369,7 @@ public class EntityArrow extends Entity implements IProjectile {
                      this.d = blockposition1.getX();
                      this.e = blockposition1.getY();
                      this.f = blockposition1.getZ();
 -                    IBlockData iblockdata1 = this.world.getType(blockposition1);
-+
-+                    IBlockData newBlockData = this.world.getType(blockposition1); // KigPaper - current block data
-+                    IBlockData iblockdata1 = this.hitBlockData == null ? newBlockData : hitBlockData; // KigPaper - use block before potential change by ProjectileHitBlockEvent
++                    IBlockData iblockdata1 = hitBlockData == null ? this.world.getType(blockposition1) : hitBlockData; // KigPaper - use block before potential change by ProjectileHitBlockEvent
  
                      this.g = iblockdata1.getBlock();
                      this.h = this.g.toLegacyData(iblockdata1);
 diff --git a/src/main/java/net/minecraft/server/EntityFireball.java b/src/main/java/net/minecraft/server/EntityFireball.java
-index 7a6a0843d..579a5ea0d 100644
+index 7a6a0843d..983775a28 100644
 --- a/src/main/java/net/minecraft/server/EntityFireball.java
 +++ b/src/main/java/net/minecraft/server/EntityFireball.java
-@@ -3,9 +3,13 @@ package net.minecraft.server;
+@@ -3,8 +3,12 @@ package net.minecraft.server;
  import java.util.List;
  
  import dev.rocco.kig.paper.api.event.ProjectileCollideEvent;
-+import dev.rocco.kig.paper.api.event.ProjectileHitBlockEvent;
-+import dev.rocco.kig.paper.api.event.ProjectileHitEntityEvent;
++import dev.rocco.kig.paper.api.event.ProjectilePreHitBlockEvent;
++import dev.rocco.kig.paper.api.event.ProjectilePreHitEntityEvent;
++import dev.rocco.kig.paper.api.event.ProjectilePreHitEvent;
  import org.bukkit.craftbukkit.event.CraftEventFactory; // CraftBukkit
-+import org.bukkit.event.entity.ProjectileHitEvent;
  
++
  public abstract class EntityFireball extends Entity {
-+    private final double BBGROW = 0.3; // KigPaper - magic number, bounding box grow
  
      private int e = -1;
-     private int f = -1;
-@@ -64,6 +68,46 @@ public abstract class EntityFireball extends Entity {
-         this.dirZ = d2 / d3 * 0.1D;
-     }
+@@ -123,14 +127,21 @@ public abstract class EntityFireball extends Entity {
+                 }
+             }
  
-+    // KigPaper - move raytracing & event handling to separate function
-+    public MovingObjectPosition getHitResult(Vec3D start, Vec3D end) {
-+        MovingObjectPosition movingobjectposition = this.world.rayTrace(start, end);
++            ProjectilePreHitEvent event; // KigPaper
 +
-+        if (movingobjectposition != null) {
-+            end = new Vec3D(movingobjectposition.pos.a, movingobjectposition.pos.b, movingobjectposition.pos.c);
-+        }
-+
-+        Entity hitCandidate = null;
-+        List<Entity> list = this.world.getEntities(this, this.getBoundingBox().a(this.motX, this.motY, this.motZ).grow(1.0D, 1.0D, 1.0D));
-+        double closestHit = Double.MAX_VALUE;
-+
-+        AxisAlignedBB axisalignedbb;
-+        MovingObjectPosition movingobjectposition1;
-+        for (Entity ent : list) {
-+            if ((this.ar < 5 && ent == shooter) || !ent.ad()) continue;
-+            axisalignedbb = ent.getBoundingBox().grow(BBGROW, BBGROW, BBGROW);
-+            movingobjectposition1 = axisalignedbb.a(start, end);
-+
-+            if (movingobjectposition1 == null) continue;
-+
-+            double dist = start.distanceSquared(movingobjectposition1.pos);
-+
-+            if (closestHit < dist) continue;
-+            closestHit = dist;
-+            hitCandidate = ent;
-+        }
-+
-+        if (hitCandidate != null) {
-+            ProjectileHitEntityEvent event = CraftEventFactory.callProjectileCollideEvent(this, hitCandidate);
-+            return event.isCancelled() ? null : new MovingObjectPosition(hitCandidate);
-+        }
-+
-+        if (movingobjectposition == null) return null;
-+
-+        ProjectileHitBlockEvent event = CraftEventFactory.callProjectileHitBlockEvent(this, movingobjectposition);
-+        return event.isCancelled() ? null : movingobjectposition;
-+    }
-+    // KigPaper end
-+
-     public void t_() {
-         if (!this.world.isClientSide && (this.shooter != null && this.shooter.dead || !this.world.isLoaded(new BlockPosition(this)))) {
-             this.die();
-@@ -92,56 +136,13 @@ public abstract class EntityFireball extends Entity {
- 
-             Vec3D vec3d = new Vec3D(this.locX, this.locY, this.locZ);
-             Vec3D vec3d1 = new Vec3D(this.locX + this.motX, this.locY + this.motY, this.locZ + this.motZ);
--            MovingObjectPosition movingobjectposition = this.world.rayTrace(vec3d, vec3d1);
--
--            vec3d = new Vec3D(this.locX, this.locY, this.locZ);
--            vec3d1 = new Vec3D(this.locX + this.motX, this.locY + this.motY, this.locZ + this.motZ);
--            if (movingobjectposition != null) {
--                vec3d1 = new Vec3D(movingobjectposition.pos.a, movingobjectposition.pos.b, movingobjectposition.pos.c);
--            }
--
--            Entity entity = null;
--            List list = this.world.getEntities(this, this.getBoundingBox().a(this.motX, this.motY, this.motZ).grow(1.0D, 1.0D, 1.0D));
--            double d0 = 0.0D;
--
--            for (int i = 0; i < list.size(); ++i) {
--                Entity entity1 = (Entity) list.get(i);
- 
--                if (entity1.ad() && (!entity1.k(this.shooter) || this.as >= 25)) {
--                    float f = 0.3F;
--                    AxisAlignedBB axisalignedbb = entity1.getBoundingBox().grow((double) f, (double) f, (double) f);
--                    MovingObjectPosition movingobjectposition1 = axisalignedbb.a(vec3d, vec3d1);
--
--                    if (movingobjectposition1 != null) {
--                        double d1 = vec3d.distanceSquared(movingobjectposition1.pos);
--
--                        if (d1 < d0 || d0 == 0.0D) {
--                            entity = entity1;
--                            d0 = d1;
--                        }
--                    }
--                }
--            }
--
--            if (entity != null) {
+             if (entity != null) {
 -                movingobjectposition = new MovingObjectPosition(entity);
--            }
--
--            // KigPaper start
++                // KigPaper start
++                event = CraftEventFactory.callProjectileCollideEvent(this, entity);
++                if (!event.isCancelled()) movingobjectposition = new MovingObjectPosition(entity);
++                // KigPaper end
+             }
+ 
+             // KigPaper start
 -            if (movingobjectposition != null && movingobjectposition.entity != null) {
 -                ProjectileCollideEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileCollideEvent(this, movingobjectposition.entity);
 -                if (event.isCancelled()) movingobjectposition = null;
--            }
--            // KigPaper end
-+            MovingObjectPosition movingobjectposition = this.getHitResult(vec3d, vec3d1); // KigPaper
- 
-             if (movingobjectposition != null) {
-                 this.a(movingobjectposition);
- 
--                // CraftBukkit start - Fire ProjectileHitEvent
--                if (this.dead) {
--                    CraftEventFactory.callProjectileHitEvent(this);
--                }
--                // CraftBukkit end
-+                // KigPaper - moved ProjectileHitEvent call
++            if (movingobjectposition != null && movingobjectposition.entity == null) {
++                event = CraftEventFactory.callProjectilePreHitBlockEvent(this, movingobjectposition);
++                if (event.isCancelled()) {
++                    movingobjectposition = null;
++                }
              }
+             // KigPaper end
  
-             this.locX += this.motX;
 diff --git a/src/main/java/net/minecraft/server/EntityFishingHook.java b/src/main/java/net/minecraft/server/EntityFishingHook.java
-index e5d2f80f6..42d641c17 100644
+index e5d2f80f6..735f1e3b6 100644
 --- a/src/main/java/net/minecraft/server/EntityFishingHook.java
 +++ b/src/main/java/net/minecraft/server/EntityFishingHook.java
-@@ -1,8 +1,10 @@
+@@ -1,8 +1,11 @@
  package net.minecraft.server;
  
 -import dev.rocco.kig.paper.api.event.ProjectileCollideEvent;
-+import dev.rocco.kig.paper.api.event.ProjectileHitBlockEvent;
-+import dev.rocco.kig.paper.api.event.ProjectileHitEntityEvent;
++import dev.rocco.kig.paper.api.event.ProjectilePreHitBlockEvent;
++import dev.rocco.kig.paper.api.event.ProjectilePreHitEntityEvent;
++import dev.rocco.kig.paper.api.event.ProjectilePreHitEvent;
  import dev.rocco.kig.paper.api.particle.ProjectileEffect;
  import org.bukkit.Location;
 +import org.bukkit.craftbukkit.event.CraftEventFactory;
  import org.bukkit.entity.Fish;
  import org.bukkit.entity.Player;
  import org.bukkit.event.player.PlayerFishEvent;
-@@ -14,6 +16,8 @@ import java.util.List;
- // CraftBukkit end
+@@ -198,9 +201,26 @@ public class EntityFishingHook extends Entity {
+                 }
+             }
  
- public class EntityFishingHook extends Entity {
-+    private final double BBGROW = 0.3; // KigPaper - magic number, bounding box grow
-+    private boolean isBlockEventCancelled = false; // KigPaper - allow clipping though ground when ProjectileHitBlockEvent is cancelled
- 
-     private static final List<PossibleFishingResult> d = Arrays.asList(new PossibleFishingResult[] { (new PossibleFishingResult(new ItemStack(Items.LEATHER_BOOTS), 10)).a(0.9F), new PossibleFishingResult(new ItemStack(Items.LEATHER), 10), new PossibleFishingResult(new ItemStack(Items.BONE), 10), new PossibleFishingResult(new ItemStack(Items.POTION), 10), new PossibleFishingResult(new ItemStack(Items.STRING), 5), (new PossibleFishingResult(new ItemStack(Items.FISHING_ROD), 2)).a(0.9F), new PossibleFishingResult(new ItemStack(Items.BOWL), 10), new PossibleFishingResult(new ItemStack(Items.STICK), 5), new PossibleFishingResult(new ItemStack(Items.DYE, 10, EnumColor.BLACK.getInvColorIndex()), 1), new PossibleFishingResult(new ItemStack(Blocks.TRIPWIRE_HOOK), 10), new PossibleFishingResult(new ItemStack(Items.ROTTEN_FLESH), 10)});
-     private static final List<PossibleFishingResult> e = Arrays.asList(new PossibleFishingResult[] { new PossibleFishingResult(new ItemStack(Blocks.WATERLILY), 1), new PossibleFishingResult(new ItemStack(Items.NAME_TAG), 1), new PossibleFishingResult(new ItemStack(Items.SADDLE), 1), (new PossibleFishingResult(new ItemStack(Items.BOW), 1)).a(0.25F).a(), (new PossibleFishingResult(new ItemStack(Items.FISHING_ROD), 1)).a(0.25F).a(), (new PossibleFishingResult(new ItemStack(Items.BOOK), 1)).a()});
-@@ -103,6 +107,50 @@ public class EntityFishingHook extends Entity {
-         this.at = 0;
-     }
- 
-+    // KigPaper start - move raytracing & event handling to separate function
-+    public MovingObjectPosition getHitResult(Vec3D start, Vec3D end) {
-+        isBlockEventCancelled = false;
-+        MovingObjectPosition movingobjectposition = this.world.rayTrace(start, end);
++            ProjectilePreHitEvent event; // KigPaper
 +
-+        if (movingobjectposition != null) {
-+            end = new Vec3D(movingobjectposition.pos.a, movingobjectposition.pos.b, movingobjectposition.pos.c);
-+        }
-+
-+        Entity hitCandidate = null;
-+        List<Entity> list = this.world.getEntities(this, this.getBoundingBox().a(this.motX, this.motY, this.motZ).grow(1.0D, 1.0D, 1.0D));
-+        double closestHit = Double.MAX_VALUE;
-+        EntityLiving entityliving = this.owner;
-+
-+        AxisAlignedBB axisalignedbb;
-+        MovingObjectPosition movingobjectposition1;
-+        for (Entity ent : list) {
-+            if ((this.au < 5 && ent == entityliving) || !ent.ad()) continue;
-+            axisalignedbb = ent.getBoundingBox().grow(BBGROW, BBGROW, BBGROW);
-+            movingobjectposition1 = axisalignedbb.a(start, end);
-+
-+            if (movingobjectposition1 == null) continue;
-+
-+            double dist = start.distanceSquared(movingobjectposition1.pos);
-+
-+            if (closestHit < dist) continue;
-+            closestHit = dist;
-+            hitCandidate = ent;
-+        }
-+
-+        if (hitCandidate != null) {
-+            ProjectileHitEntityEvent event = CraftEventFactory.callProjectileCollideEvent(this, hitCandidate);
-+            return event.isCancelled() ? null : new MovingObjectPosition(hitCandidate);
-+        }
-+
-+        if (movingobjectposition == null) return null;
-+
-+        ProjectileHitBlockEvent event = CraftEventFactory.callProjectileHitBlockEvent(this, movingobjectposition);
-+        if (!event.isCancelled()) return movingobjectposition;
-+        isBlockEventCancelled = true;
-+        return null;
-+    }
-+    // KigPaper end
-+
-     public void t_() {
-         super.t_();
-         if (this.az > 0) {
-@@ -166,41 +214,8 @@ public class EntityFishingHook extends Entity {
- 
-             Vec3D vec3d = new Vec3D(this.locX, this.locY, this.locZ);
-             Vec3D vec3d1 = new Vec3D(this.locX + this.motX, this.locY + this.motY, this.locZ + this.motZ);
--            MovingObjectPosition movingobjectposition = this.world.rayTrace(vec3d, vec3d1);
--
--            vec3d = new Vec3D(this.locX, this.locY, this.locZ);
--            vec3d1 = new Vec3D(this.locX + this.motX, this.locY + this.motY, this.locZ + this.motZ);
--            if (movingobjectposition != null) {
--                vec3d1 = new Vec3D(movingobjectposition.pos.a, movingobjectposition.pos.b, movingobjectposition.pos.c);
--            }
--
--            Entity entity = null;
--            List list = this.world.getEntities(this, this.getBoundingBox().a(this.motX, this.motY, this.motZ).grow(1.0D, 1.0D, 1.0D));
--            double d5 = 0.0D;
--
--            double d6;
--
--            for (int i = 0; i < list.size(); ++i) {
--                Entity entity1 = (Entity) list.get(i);
--
--                if (entity1.ad() && (entity1 != this.owner || this.au >= 5)) {
--                    float f = 0.3F;
--                    AxisAlignedBB axisalignedbb = entity1.getBoundingBox().grow((double) f, (double) f, (double) f);
--                    MovingObjectPosition movingobjectposition1 = axisalignedbb.a(vec3d, vec3d1);
- 
--                    if (movingobjectposition1 != null) {
--                        d6 = vec3d.distanceSquared(movingobjectposition1.pos);
--                        if (d6 < d5 || d5 == 0.0D) {
--                            entity = entity1;
--                            d5 = d6;
--                        }
--                    }
--                }
--            }
--
--            if (entity != null) {
+             if (entity != null) {
 -                movingobjectposition = new MovingObjectPosition(entity);
--            }
-+            MovingObjectPosition movingobjectposition = getHitResult(vec3d, vec3d1); // KigPaper - move collision & event logic to function
++                // KigPaper start
++                event = CraftEventFactory.callProjectileCollideEvent(this, entity);
++                if (!event.isCancelled()) movingobjectposition = new MovingObjectPosition(entity);
++                // KigPaper end
++            }
++
++            // KigPaper start
++            // KigPaper - allow clipping though ground when ProjectileHitBlockEvent is cancelled
++            boolean isBlockEventCancelled = false;
++            if (movingobjectposition != null && movingobjectposition.entity == null) {
++                event = CraftEventFactory.callProjectilePreHitBlockEvent(this, movingobjectposition);
++                if (event.isCancelled()) {
++                    isBlockEventCancelled = true;
++                    movingobjectposition = null;
++                }
+             }
++            // KigPaper end
  
              // PaperSpigot start - Allow fishing hooks to fly through vanished players the shooter can't see
              if (movingobjectposition != null && movingobjectposition.entity instanceof EntityPlayer && owner != null && owner instanceof EntityPlayer) {
-@@ -215,15 +230,10 @@ public class EntityFishingHook extends Entity {
+@@ -215,12 +235,7 @@ public class EntityFishingHook extends Entity {
              // KigPaper end
              // PaperSpigot end
  
@@ -420,155 +178,70 @@ index e5d2f80f6..42d641c17 100644
 +            // KigPaper - moved ProjectileCollideEvent call
  
              if (movingobjectposition != null) {
--                org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileHitEvent(this); // Craftbukkit - Call event
-+                // KigPaper - moved ProjectileHitEvent call
-                 if (movingobjectposition.entity != null) {
-                     if (movingobjectposition.entity.damageEntity(DamageSource.projectile(this, this.owner), 0.0F)) {
-                         this.hooked = movingobjectposition.entity;
-@@ -240,7 +250,14 @@ public class EntityFishingHook extends Entity {
+                 org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileHitEvent(this); // Craftbukkit - Call event
+@@ -240,7 +255,16 @@ public class EntityFishingHook extends Entity {
                          trailEffect.spawn(loc);
                      }
                  }
 +
++
 +                boolean oldNoclip = this.noclip; // KigPaper
-+                this.noclip = this.noclip || this.isBlockEventCancelled; // KigPaper - allow projectiles to pass through blocks when event cancelled
++                this.noclip = this.noclip || isBlockEventCancelled; // KigPaper - allow projectiles to pass through blocks when event cancelled
 +
                  this.move(this.motX, this.motY, this.motZ);
 +
 +                this.noclip = oldNoclip; // KigPaper
 +
++
                  float f1 = MathHelper.sqrt(this.motX * this.motX + this.motZ * this.motZ);
  
                  this.yaw = (float) (MathHelper.b(this.motX, this.motZ) * 180.0D / 3.1415927410125732D);
-@@ -382,7 +399,7 @@ public class EntityFishingHook extends Entity {
-                     }
-                 }
- 
--                d6 = d7 * 2.0D - 1.0D;
-+                double d6 = d7 * 2.0D - 1.0D; // KigPaper - added initialisation, variable was initialised in code moved to getHitResult
-                 this.motY += 0.03999999910593033D * d6;
-                 if (d7 > 0.0D) {
-                     f2 = (float) ((double) f2 * 0.9D);
 diff --git a/src/main/java/net/minecraft/server/EntityProjectile.java b/src/main/java/net/minecraft/server/EntityProjectile.java
-index 793cd1191..6c77271d3 100644
+index 793cd1191..eb9ceede3 100644
 --- a/src/main/java/net/minecraft/server/EntityProjectile.java
 +++ b/src/main/java/net/minecraft/server/EntityProjectile.java
-@@ -2,9 +2,11 @@ package net.minecraft.server;
+@@ -2,9 +2,10 @@ package net.minecraft.server;
  
  // KigPaper start
  
 -import dev.rocco.kig.paper.api.event.ProjectileCollideEvent;
-+import dev.rocco.kig.paper.api.event.ProjectileHitBlockEvent;
-+import dev.rocco.kig.paper.api.event.ProjectileHitEntityEvent;
++import dev.rocco.kig.paper.api.event.ProjectilePreHitEvent;
  import dev.rocco.kig.paper.api.particle.ProjectileEffect;
  import org.bukkit.Location;
 +import org.bukkit.craftbukkit.event.CraftEventFactory;
  import org.bukkit.entity.Player;
  
  import java.util.List;
-@@ -12,6 +14,8 @@ import java.util.UUID;
+@@ -135,6 +136,8 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
+             vec3d1 = new Vec3D(movingobjectposition.pos.a, movingobjectposition.pos.b, movingobjectposition.pos.c);
+         }
  
- public abstract class EntityProjectile extends Entity implements IProjectile {
++        ProjectilePreHitEvent event; // KigPaper
++
+         if (!this.world.isClientSide) {
+             Entity entity = null;
+             List list = this.world.getEntities(this, this.getBoundingBox().a(this.motX, this.motY, this.motZ).grow(1.0D, 1.0D, 1.0D));
+@@ -161,9 +164,18 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
+             }
  
-+    private final double BBGROW = 0.3; // KigPaper - magic number, bounding box grow
-+
-     private int blockX = -1;
-     private int blockY = -1;
-     private int blockZ = -1;
-@@ -96,6 +100,47 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
-         this.i = 0;
-     }
- 
-+    // KigPaper - move raytracing & event handling to separate function
-+    public MovingObjectPosition getHitResult(Vec3D start, Vec3D end) {
-+        MovingObjectPosition movingobjectposition = this.world.rayTrace(start, end);
-+
-+        if (movingobjectposition != null) {
-+            end = new Vec3D(movingobjectposition.pos.a, movingobjectposition.pos.b, movingobjectposition.pos.c);
-+        }
-+
-+        Entity hitCandidate = null;
-+        List<Entity> list = this.world.getEntities(this, this.getBoundingBox().a(this.motX, this.motY, this.motZ).grow(1.0D, 1.0D, 1.0D));
-+        double closestHit = Double.MAX_VALUE;
-+        EntityLiving entityliving = this.getShooter();
-+
-+        AxisAlignedBB axisalignedbb;
-+        MovingObjectPosition movingobjectposition1;
-+        for (Entity ent : list) {
-+            if ((this.ar < 5 && ent == entityliving) || !ent.ad()) continue;
-+            axisalignedbb = ent.getBoundingBox().grow(BBGROW, BBGROW, BBGROW);
-+            movingobjectposition1 = axisalignedbb.a(start, end);
-+
-+            if (movingobjectposition1 == null) continue;
-+
-+            double dist = start.distanceSquared(movingobjectposition1.pos);
-+
-+            if (closestHit < dist) continue;
-+            closestHit = dist;
-+            hitCandidate = ent;
-+        }
-+
-+        if (hitCandidate != null) {
-+            ProjectileHitEntityEvent event = CraftEventFactory.callProjectileCollideEvent(this, hitCandidate);
-+            return event.isCancelled() ? null : new MovingObjectPosition(hitCandidate);
-+        }
-+
-+        if (movingobjectposition == null) return null;
-+
-+        ProjectileHitBlockEvent event = CraftEventFactory.callProjectileHitBlockEvent(this, movingobjectposition);
-+        return event.isCancelled() ? null : movingobjectposition;
-+    }
-+    // KigPaper end
-+
-     public void t_() {
-         this.P = this.locX;
-         this.Q = this.locY;
-@@ -127,43 +172,8 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
- 
-         Vec3D vec3d = new Vec3D(this.locX, this.locY, this.locZ);
-         Vec3D vec3d1 = new Vec3D(this.locX + this.motX, this.locY + this.motY, this.locZ + this.motZ);
--        MovingObjectPosition movingobjectposition = this.world.rayTrace(vec3d, vec3d1);
- 
--        vec3d = new Vec3D(this.locX, this.locY, this.locZ);
--        vec3d1 = new Vec3D(this.locX + this.motX, this.locY + this.motY, this.locZ + this.motZ);
--        if (movingobjectposition != null) {
--            vec3d1 = new Vec3D(movingobjectposition.pos.a, movingobjectposition.pos.b, movingobjectposition.pos.c);
--        }
--
--        if (!this.world.isClientSide) {
--            Entity entity = null;
--            List list = this.world.getEntities(this, this.getBoundingBox().a(this.motX, this.motY, this.motZ).grow(1.0D, 1.0D, 1.0D));
--            double d0 = 0.0D;
--            EntityLiving entityliving = this.getShooter();
--
--            for (int i = 0; i < list.size(); ++i) {
--                Entity entity1 = (Entity) list.get(i);
--
--                if (entity1.ad() && (entity1 != entityliving || this.ar >= 5)) {
--                    float f = 0.3F;
--                    AxisAlignedBB axisalignedbb = entity1.getBoundingBox().grow((double) f, (double) f, (double) f);
--                    MovingObjectPosition movingobjectposition1 = axisalignedbb.a(vec3d, vec3d1);
--
--                    if (movingobjectposition1 != null) {
--                        double d1 = vec3d.distanceSquared(movingobjectposition1.pos);
--
--                        if (d1 < d0 || d0 == 0.0D) {
--                            entity = entity1;
--                            d0 = d1;
--                        }
--                    }
--                }
--            }
--
--            if (entity != null) {
+             if (entity != null) {
 -                movingobjectposition = new MovingObjectPosition(entity);
--            }
--        }
-+        MovingObjectPosition movingobjectposition = this.getHitResult(vec3d, vec3d1); // KigPaper - move collision & event logic to function
++                // KigPaper start
++                event = CraftEventFactory.callProjectileCollideEvent(this, entity);
++                if (!event.isCancelled()) movingobjectposition = new MovingObjectPosition(entity);
++                // KigPaper end
+             }
+         }
++        // KigPaper start
++        if (movingobjectposition != null && movingobjectposition.entity == null) {
++            event = CraftEventFactory.callProjectilePreHitBlockEvent(this, movingobjectposition);
++            if (event.isCancelled()) movingobjectposition = null;
++        }
++        // KigPaper end
  
          // PaperSpigot start - Allow projectiles to fly through vanished players the shooter can't see
          if (movingobjectposition != null && movingobjectposition.entity instanceof EntityPlayer && shooter != null && shooter instanceof EntityPlayer) {
-@@ -178,23 +188,14 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
+@@ -178,12 +190,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile {
          // KigPaper end
          // PaperSpigot end
  
@@ -582,28 +255,16 @@ index 793cd1191..6c77271d3 100644
  
          if (movingobjectposition != null) {
              if (movingobjectposition.type == MovingObjectPosition.EnumMovingObjectType.BLOCK && this.world.getType(movingobjectposition.a()).getBlock() == Blocks.PORTAL) {
-                 this.d(movingobjectposition.a());
-             } else {
-                 this.a(movingobjectposition);
--                // CraftBukkit start
--                if (this.dead) {
--                    org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileHitEvent(this);
--                }
--                // CraftBukkit end
-+                // KigPaper - moved ProjectileHitEvent call
-             }
-         }
- 
 diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
-index ff62ce025..65b091696 100644
+index ff62ce025..5b495c4ea 100644
 --- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
 +++ b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
 @@ -10,6 +10,8 @@ import com.google.common.base.Function;
  import com.google.common.base.Functions;
  
  import dev.rocco.kig.paper.api.event.ProjectileCollideEvent;
-+import dev.rocco.kig.paper.api.event.ProjectileHitBlockEvent;
-+import dev.rocco.kig.paper.api.event.ProjectileHitEntityEvent;
++import dev.rocco.kig.paper.api.event.ProjectilePreHitBlockEvent;
++import dev.rocco.kig.paper.api.event.ProjectilePreHitEntityEvent;
  import net.minecraft.server.*;
  
  import org.bukkit.Bukkit;
@@ -613,7 +274,7 @@ index ff62ce025..65b091696 100644
      // KigPaper start
 +
 +    /**
-+     * @deprecated use {@link dev.rocco.kig.paper.api.event.ProjectileHitEntityEvent}
++     * @deprecated use {@link ProjectilePreHitEntityEvent}
 +     */
 +    @Deprecated
      public static ProjectileCollideEvent callProjectileCollideEvent(Entity entity, Entity collided) {
@@ -622,15 +283,15 @@ index ff62ce025..65b091696 100644
          return event;
      }
 +
-+    public static ProjectileHitEntityEvent callProjectileHitEntityEvent(Entity projectile, Entity hitEntity) {
-+        ProjectileHitEntityEvent event = new ProjectileHitEntityEvent((Projectile) projectile, hitEntity.getBukkitEntity());
++    public static ProjectilePreHitEntityEvent callProjectilePreHitEntityEvent(Entity projectile, Entity hitEntity) {
++        ProjectilePreHitEntityEvent event = new ProjectilePreHitEntityEvent((Projectile) projectile, hitEntity.getBukkitEntity());
 +        projectile.world.getServer().getPluginManager().callEvent(event);
 +        return event;
 +    }
 +
-+    public static ProjectileHitBlockEvent callProjectileHitBlockEvent(Entity projectile, MovingObjectPosition movingObjectPosition) {
++    public static ProjectilePreHitBlockEvent callProjectilePreHitBlockEvent(Entity projectile, MovingObjectPosition movingObjectPosition) {
 +        org.bukkit.block.Block block = projectile.world.getWorld().getBlockAt(movingObjectPosition.a().getX(), movingObjectPosition.a().getY(), movingObjectPosition.a().getZ());
-+        ProjectileHitBlockEvent event = new ProjectileHitBlockEvent((Projectile) projectile.getBukkitEntity(), block, CraftBlock.notchToBlockFace(movingObjectPosition.direction));
++        ProjectilePreHitBlockEvent event = new ProjectilePreHitBlockEvent((Projectile) projectile.getBukkitEntity(), block, CraftBlock.notchToBlockFace(movingObjectPosition.direction));
 +        projectile.world.getServer().getPluginManager().callEvent(event);
 +        return event;
 +    }
