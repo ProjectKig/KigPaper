@@ -1,11 +1,11 @@
-From 837c6d8493d4135a8c0e66ac040ad5ffc0caea80 Mon Sep 17 00:00:00 2001
+From 9cef6a2f9bcb79a176f428c9d37a8ed1c3c4cf1d Mon Sep 17 00:00:00 2001
 From: Vanolex <vanolex@vanolex.net>
-Date: Thu, 22 Jan 2026 19:40:53 +0100
+Date: Sat, 24 Jan 2026 00:30:00 +0100
 Subject: [PATCH] Better-ProjectileHitEvent-API
 
 
 diff --git a/src/main/java/net/minecraft/server/EntityArrow.java b/src/main/java/net/minecraft/server/EntityArrow.java
-index 78bb8bfbe..e3c47de61 100644
+index 78bb8bfbe..928bbbf7e 100644
 --- a/src/main/java/net/minecraft/server/EntityArrow.java
 +++ b/src/main/java/net/minecraft/server/EntityArrow.java
 @@ -1,9 +1,10 @@
@@ -20,33 +20,22 @@ index 78bb8bfbe..e3c47de61 100644
  import org.bukkit.entity.LivingEntity;
  import org.bukkit.entity.Player;
  import org.bukkit.event.entity.EntityCombustByEntityEvent;
-@@ -261,8 +262,15 @@ public class EntityArrow extends Entity implements IProjectile {
+@@ -261,8 +262,13 @@ public class EntityArrow extends Entity implements IProjectile {
              // PaperSpigot end
  
              // KigPaper start
 -            if (movingobjectposition != null && movingobjectposition.entity != null) {
 -                ProjectileCollideEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileCollideEvent(this, movingobjectposition.entity);
-+            IBlockData hitBlockData = null;
 +            if (movingobjectposition != null) {
 +                ProjectilePreHitEvent event;
 +                if (movingobjectposition.entity != null) {
 +                    event = CraftEventFactory.callProjectileCollideEvent(this, movingobjectposition.entity);
 +                } else {
-+                    hitBlockData = this.world.getType(movingobjectposition.a());
 +                    event = CraftEventFactory.callProjectilePreHitBlockEvent(this, movingobjectposition);
 +                }
                  if (event.isCancelled()) movingobjectposition = null;
              }
              // KigPaper end
-@@ -357,7 +365,7 @@ public class EntityArrow extends Entity implements IProjectile {
-                     this.d = blockposition1.getX();
-                     this.e = blockposition1.getY();
-                     this.f = blockposition1.getZ();
--                    IBlockData iblockdata1 = this.world.getType(blockposition1);
-+                    IBlockData iblockdata1 = hitBlockData == null ? this.world.getType(blockposition1) : hitBlockData; // KigPaper - use block before potential change by ProjectileHitBlockEvent
- 
-                     this.g = iblockdata1.getBlock();
-                     this.h = this.g.toLegacyData(iblockdata1);
 diff --git a/src/main/java/net/minecraft/server/EntityFireball.java b/src/main/java/net/minecraft/server/EntityFireball.java
 index 7a6a0843d..4418c9784 100644
 --- a/src/main/java/net/minecraft/server/EntityFireball.java
