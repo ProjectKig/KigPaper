@@ -1,0 +1,196 @@
+From 2326dfc8d8961b6d6da4772593c5fa78e3456e5d Mon Sep 17 00:00:00 2001
+From: Vanolex <vanolex@vanolex.net>
+Date: Wed, 21 Jan 2026 01:33:31 +0100
+Subject: [PATCH] Better-ProjectileHitEvent-API
+
+
+diff --git a/src/main/java/dev/rocco/kig/paper/api/event/ProjectileCollideEvent.java b/src/main/java/dev/rocco/kig/paper/api/event/ProjectileCollideEvent.java
+index 4152109c..0ab8d44a 100644
+--- a/src/main/java/dev/rocco/kig/paper/api/event/ProjectileCollideEvent.java
++++ b/src/main/java/dev/rocco/kig/paper/api/event/ProjectileCollideEvent.java
+@@ -4,21 +4,21 @@ import org.bukkit.entity.Entity;
+ import org.bukkit.entity.Projectile;
+ import org.bukkit.event.Cancellable;
+ import org.bukkit.event.HandlerList;
+-import org.bukkit.event.entity.EntityEvent;
+ 
+ /**
+  * Fired when a {@link Projectile} is about to collide with an {@link Entity}.
+  * Cancelling the event will make the projectile go through the entity.
++ * 
++ * @deprecated use {@link ProjectilePreHitEntityEvent}
+  */
+-public class ProjectileCollideEvent extends EntityEvent implements Cancellable {
++@Deprecated
++public class ProjectileCollideEvent extends ProjectilePreHitEntityEvent implements Cancellable {
+     private static final HandlerList handlers = new HandlerList();
+ 
+-    private final Entity collided;
+     private boolean cancel;
+ 
+     public ProjectileCollideEvent(Projectile projectile, Entity collided) {
+-        super(projectile);
+-        this.collided = collided;
++        super(projectile, collided);
+     }
+ 
+     @Override
+@@ -36,7 +36,7 @@ public class ProjectileCollideEvent extends EntityEvent implements Cancellable {
+     }
+ 
+     public Entity getCollided() {
+-        return collided;
++        return getHitEntity();
+     }
+ 
+     @Override
+diff --git a/src/main/java/dev/rocco/kig/paper/api/event/ProjectilePreHitBlockEvent.java b/src/main/java/dev/rocco/kig/paper/api/event/ProjectilePreHitBlockEvent.java
+new file mode 100644
+index 00000000..c3acdf9d
+--- /dev/null
++++ b/src/main/java/dev/rocco/kig/paper/api/event/ProjectilePreHitBlockEvent.java
+@@ -0,0 +1,42 @@
++package dev.rocco.kig.paper.api.event;
++
++import org.bukkit.block.Block;
++import org.bukkit.block.BlockFace;
++import org.bukkit.entity.Projectile;
++import org.bukkit.event.entity.ProjectileHitEvent;
++
++/**
++ * Called when a projectile hits a block. Called every tick when phasing through blocks.
++ */
++public class ProjectilePreHitBlockEvent extends ProjectilePreHitEvent {
++    private final Block hitBlock;
++    private final BlockFace hitFace;
++
++    public ProjectilePreHitBlockEvent(Projectile projectile, Block hitBlock, BlockFace hitFace) { this(projectile,hitBlock,hitFace,false); }
++    public ProjectilePreHitBlockEvent(Projectile projectile, Block hitBlock, BlockFace hitFace, boolean cancelled) {
++        super(projectile, cancelled);
++        this.hitBlock = hitBlock;
++        this.hitFace = hitFace;
++    }
++
++    /**
++     * Gets the block that is about to be hit.
++     * <p>
++     * Note: modifying the block does not change the outcome of the event.
++     *
++     * @return the block that is about to be hit
++     */
++    public Block getHitBlock() {
++        return hitBlock;
++    }
++
++    /**
++     * Gets the face of the block that is about to be hit.
++     *
++     * @return the face of the block that is about to be hit
++     */
++    public BlockFace getHitFace() {
++        return hitFace;
++    }
++}
++
+diff --git a/src/main/java/dev/rocco/kig/paper/api/event/ProjectilePreHitEntityEvent.java b/src/main/java/dev/rocco/kig/paper/api/event/ProjectilePreHitEntityEvent.java
+new file mode 100644
+index 00000000..c04ad72a
+--- /dev/null
++++ b/src/main/java/dev/rocco/kig/paper/api/event/ProjectilePreHitEntityEvent.java
+@@ -0,0 +1,27 @@
++package dev.rocco.kig.paper.api.event;
++
++import org.bukkit.entity.Entity;
++import org.bukkit.entity.Projectile;
++
++/**
++ * Called when a projectile is about to hit an entity.
++ */
++public class ProjectilePreHitEntityEvent extends ProjectilePreHitEvent {
++
++    private final Entity hitEntity;
++
++    public ProjectilePreHitEntityEvent(Projectile projectile, Entity hitEntity) { this(projectile, hitEntity, false); }
++    public ProjectilePreHitEntityEvent(Projectile projectile, Entity hitEntity, boolean cancelled) {
++        super(projectile, cancelled);
++        this.hitEntity = hitEntity;
++    }
++
++    /**
++     * Gets the entity that is about to be hit.
++     *
++     * @return the entity that is about to be hit
++     */
++    public Entity getHitEntity() {
++        return hitEntity;
++    }
++}
+diff --git a/src/main/java/dev/rocco/kig/paper/api/event/ProjectilePreHitEvent.java b/src/main/java/dev/rocco/kig/paper/api/event/ProjectilePreHitEvent.java
+new file mode 100644
+index 00000000..4726a60e
+--- /dev/null
++++ b/src/main/java/dev/rocco/kig/paper/api/event/ProjectilePreHitEvent.java
+@@ -0,0 +1,60 @@
++package dev.rocco.kig.paper.api.event;
++
++import org.bukkit.entity.Projectile;
++import org.bukkit.event.Cancellable;
++import org.bukkit.event.HandlerList;
++import org.bukkit.event.entity.EntityEvent;
++
++/**
++ * Called when a projectile is about to hit something (Entity or Block).
++ * Cancelling disables collisions.
++ */
++public class ProjectilePreHitEvent extends EntityEvent implements Cancellable {
++    private static final HandlerList handlers = new HandlerList();
++    private boolean cancelled;
++
++    public ProjectilePreHitEvent(final Projectile projectile) { this(projectile, false); }
++    public ProjectilePreHitEvent(final Projectile projectile, final boolean cancelled) {
++        super(projectile);
++        this.cancelled = cancelled;
++    }
++
++    @Override
++    /**
++     * Gets the projectile involved in this event.
++     *
++     * @return the projectile involved in this event
++     */
++    public Projectile getEntity() {
++        return (Projectile) entity;
++    }
++
++    @Override
++    public HandlerList getHandlers() {
++        return handlers;
++    }
++
++    /**
++     * Gets the handler list for this event.
++     *
++     * @return the handler list
++     */
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++
++    @Override
++    public boolean isCancelled() {
++        return cancelled;
++    }
++
++    @Override
++    /**
++     * Sets whether to cancel the collision.
++     *
++     * @param cancel true if the collision should be cancelled
++     */
++    public void setCancelled(boolean cancel) {
++        cancelled = cancel;
++    }
++}
+-- 
+2.51.0.windows.1
+
