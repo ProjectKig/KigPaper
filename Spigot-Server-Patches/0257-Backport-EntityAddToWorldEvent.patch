@@ -1,0 +1,30 @@
+From 1c2d4b3c520807f6599415bd3771c622ddab4706 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Sat, 24 Jan 2026 10:39:53 +0100
+Subject: [PATCH] Backport EntityAddToWorldEvent
+
+
+diff --git a/src/main/java/net/minecraft/server/WorldServer.java b/src/main/java/net/minecraft/server/WorldServer.java
+index 3f2ea8d73..c32db8375 100644
+--- a/src/main/java/net/minecraft/server/WorldServer.java
++++ b/src/main/java/net/minecraft/server/WorldServer.java
+@@ -14,6 +14,7 @@ import java.util.Set;
+ import java.util.TreeSet;
+ import java.util.UUID;
+ 
++import dev.rocco.kig.paper.api.event.EntityAddToWorldEvent;
+ import dev.rocco.kig.paper.impl.cheetah.SinkEntityPlayer;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+@@ -1017,6 +1018,8 @@ public class WorldServer extends World implements IAsyncTaskHandler {
+             }
+         }
+ 
++        // KigPaper
++        getServer().getPluginManager().callEvent(new EntityAddToWorldEvent(entity.getBukkitEntity(), getWorld()));
+     }
+ 
+     protected void b(Entity entity) {
+-- 
+2.52.0
+

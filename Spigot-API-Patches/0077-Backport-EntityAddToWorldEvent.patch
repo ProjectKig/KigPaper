@@ -1,0 +1,50 @@
+From 92aff77c76097ae8383cf5784e99c476b0e6baf6 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Sat, 24 Jan 2026 10:39:53 +0100
+Subject: [PATCH] Backport EntityAddToWorldEvent
+
+
+diff --git a/src/main/java/dev/rocco/kig/paper/api/event/EntityAddToWorldEvent.java b/src/main/java/dev/rocco/kig/paper/api/event/EntityAddToWorldEvent.java
+new file mode 100644
+index 00000000..7e5582be
+--- /dev/null
++++ b/src/main/java/dev/rocco/kig/paper/api/event/EntityAddToWorldEvent.java
+@@ -0,0 +1,35 @@
++package dev.rocco.kig.paper.api.event;
++
++import org.bukkit.World;
++import org.bukkit.entity.Entity;
++import org.bukkit.event.HandlerList;
++import org.bukkit.event.entity.EntityEvent;
++
++/**
++ * Fired any time an entity is being added to the world, for any reason (including a chunk loading).
++ *
++ * <p>Backported from modern Paper.
++ */
++public class EntityAddToWorldEvent extends EntityEvent {
++  private static final HandlerList handlers = new HandlerList();
++
++  private final World world;
++
++  public EntityAddToWorldEvent(Entity entity, World world) {
++    super(entity);
++    this.world = world;
++  }
++
++  public World getWorld() {
++    return world;
++  }
++
++  @Override
++  public HandlerList getHandlers() {
++    return handlers;
++  }
++
++  public static HandlerList getHandlerList() {
++    return handlers;
++  }
++}
+-- 
+2.52.0
+
