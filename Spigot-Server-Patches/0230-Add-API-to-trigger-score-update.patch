@@ -1,14 +1,14 @@
-From bb5aae6829f6f17f0100edc8d27f9efee25b8b4a Mon Sep 17 00:00:00 2001
+From da2f7c3dd7595e0ce0f4dbc9189d0e331f8e22cd Mon Sep 17 00:00:00 2001
 From: RoccoDev <hey@rocco.dev>
 Date: Sun, 13 Mar 2022 18:17:21 +0100
 Subject: [PATCH] Add API to trigger score update
 
 
 diff --git a/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftScoreboardManager.java b/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftScoreboardManager.java
-index fbea5db29..ab459c438 100644
+index fbea5db29..43dcb6f7a 100644
 --- a/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftScoreboardManager.java
 +++ b/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftScoreboardManager.java
-@@ -1,13 +1,8 @@
+@@ -1,30 +1,15 @@
  package org.bukkit.craftbukkit.scoreboard;
  
 -import java.util.ArrayList;
@@ -18,21 +18,32 @@ index fbea5db29..ab459c438 100644
 -import java.util.Iterator;
 -import java.util.List;
 -import java.util.Map;
-+import java.util.*;
- 
-+import com.google.common.base.Preconditions;
- import net.minecraft.server.EntityPlayer;
- import net.minecraft.server.IScoreboardCriteria;
- import net.minecraft.server.MinecraftServer;
-@@ -23,6 +18,7 @@ import org.apache.commons.lang.Validate;
+-
+-import net.minecraft.server.EntityPlayer;
+-import net.minecraft.server.IScoreboardCriteria;
+-import net.minecraft.server.MinecraftServer;
+-import net.minecraft.server.PacketPlayOutScoreboardObjective;
+-import net.minecraft.server.PacketPlayOutScoreboardTeam;
+-import net.minecraft.server.Scoreboard;
+-import net.minecraft.server.ScoreboardObjective;
+-import net.minecraft.server.ScoreboardScore;
+-import net.minecraft.server.ScoreboardServer;
+-import net.minecraft.server.ScoreboardTeam;
+-
++import net.minecraft.server.*;
+ import org.apache.commons.lang.Validate;
++import org.bukkit.Bukkit;
  import org.bukkit.craftbukkit.entity.CraftPlayer;
  import org.bukkit.craftbukkit.util.WeakCollection;
  import org.bukkit.entity.Player;
-+import org.bukkit.scoreboard.Criterias;
  import org.bukkit.scoreboard.ScoreboardManager;
  
++import java.util.*;
++
  public final class CraftScoreboardManager implements ScoreboardManager {
-@@ -116,4 +112,25 @@ public final class CraftScoreboardManager implements ScoreboardManager {
+     private final CraftScoreboard mainScoreboard;
+     private final MinecraftServer server;
+@@ -116,4 +101,38 @@ public final class CraftScoreboardManager implements ScoreboardManager {
              score.updateForList((List) of);
          }
      }
@@ -41,23 +52,36 @@ index fbea5db29..ab459c438 100644
 +    @Override
 +    public void updateScoresFor(String criteria, Collection<String> scoreboardEntries, Collection<Player> receivers) {
 +        CraftCriteria craftCriteria = CraftCriteria.getFromBukkit(criteria);
-+        List<EntityPlayer> players;
-+        if (receivers.isEmpty()) {
-+            players = Collections.emptyList();
-+        } else if (receivers.size() == 1) {
-+            players = Collections.singletonList(((CraftPlayer) receivers.iterator().next()).getHandle());
-+        } else {
-+            players = new ArrayList<>(receivers.size());
-+            for (Player receiver : receivers) {
-+                players.add(((CraftPlayer) receiver).getHandle());
++        Map<String, EntityPlayer> scoreboardEntryMap = new HashMap<>();
++        Set<Scoreboard> boards = new HashSet<>();
++
++        for (Player player : receivers) {
++            org.bukkit.scoreboard.Scoreboard board = player.getScoreboard();
++            if (board instanceof CraftScoreboard) {
++                boards.add(((CraftScoreboard) board).getHandle());
 +            }
 +        }
++
++        for (Player player : Bukkit.getOnlinePlayers()) {
++            scoreboardEntryMap.put(player.getEffectiveName(), ((CraftPlayer) player).getHandle());
++        }
++
 +        for (String entry : scoreboardEntries) {
-+            updateAllScoresForList(craftCriteria.criteria, entry, players);
++            EntityPlayer entity = scoreboardEntryMap.get(entry);
++            if (entity == null) {
++                continue;
++            }
++            List<EntityHuman> list = Collections.singletonList(entity);
++            for (Scoreboard board : boards) {
++                for (ScoreboardObjective objective : board.getObjectivesForCriteria(craftCriteria.criteria)) {
++                    ScoreboardScore score = board.getPlayerScoreForObjective(entry, objective);
++                    score.updateForList(list);
++                }
++            }
 +        }
 +    }
 +    // KigPaper end
  }
 -- 
-2.34.1
+2.52.0
 
