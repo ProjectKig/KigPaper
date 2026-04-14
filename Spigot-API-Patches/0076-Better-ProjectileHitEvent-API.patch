@@ -1,14 +1,14 @@
-From 2326dfc8d8961b6d6da4772593c5fa78e3456e5d Mon Sep 17 00:00:00 2001
+From 63c04721157677a99859be68bc8a78e32a4811f7 Mon Sep 17 00:00:00 2001
 From: Vanolex <vanolex@vanolex.net>
 Date: Wed, 21 Jan 2026 01:33:31 +0100
 Subject: [PATCH] Better-ProjectileHitEvent-API
 
 
 diff --git a/src/main/java/dev/rocco/kig/paper/api/event/ProjectileCollideEvent.java b/src/main/java/dev/rocco/kig/paper/api/event/ProjectileCollideEvent.java
-index 4152109c..0ab8d44a 100644
+index 4152109c..f41dcee0 100644
 --- a/src/main/java/dev/rocco/kig/paper/api/event/ProjectileCollideEvent.java
 +++ b/src/main/java/dev/rocco/kig/paper/api/event/ProjectileCollideEvent.java
-@@ -4,21 +4,21 @@ import org.bukkit.entity.Entity;
+@@ -4,21 +4,19 @@ import org.bukkit.entity.Entity;
  import org.bukkit.entity.Projectile;
  import org.bukkit.event.Cancellable;
  import org.bukkit.event.HandlerList;
@@ -21,11 +21,11 @@ index 4152109c..0ab8d44a 100644
 + * @deprecated use {@link ProjectilePreHitEntityEvent}
   */
 -public class ProjectileCollideEvent extends EntityEvent implements Cancellable {
+-    private static final HandlerList handlers = new HandlerList();
+-
+-    private final Entity collided;
 +@Deprecated
 +public class ProjectileCollideEvent extends ProjectilePreHitEntityEvent implements Cancellable {
-     private static final HandlerList handlers = new HandlerList();
- 
--    private final Entity collided;
      private boolean cancel;
  
      public ProjectileCollideEvent(Projectile projectile, Entity collided) {
@@ -35,9 +35,19 @@ index 4152109c..0ab8d44a 100644
      }
  
      @Override
-@@ -36,7 +36,7 @@ public class ProjectileCollideEvent extends EntityEvent implements Cancellable {
+@@ -26,17 +24,8 @@ public class ProjectileCollideEvent extends EntityEvent implements Cancellable {
+         return (Projectile) entity;
      }
  
+-    @Override
+-    public HandlerList getHandlers() {
+-        return handlers;
+-    }
+-
+-    public static HandlerList getHandlerList() {
+-        return handlers;
+-    }
+-
      public Entity getCollided() {
 -        return collided;
 +        return getHitEntity();
@@ -94,19 +104,21 @@ index 00000000..c3acdf9d
 +
 diff --git a/src/main/java/dev/rocco/kig/paper/api/event/ProjectilePreHitEntityEvent.java b/src/main/java/dev/rocco/kig/paper/api/event/ProjectilePreHitEntityEvent.java
 new file mode 100644
-index 00000000..c04ad72a
+index 00000000..5d72e081
 --- /dev/null
 +++ b/src/main/java/dev/rocco/kig/paper/api/event/ProjectilePreHitEntityEvent.java
-@@ -0,0 +1,27 @@
+@@ -0,0 +1,38 @@
 +package dev.rocco.kig.paper.api.event;
 +
 +import org.bukkit.entity.Entity;
 +import org.bukkit.entity.Projectile;
++import org.bukkit.event.HandlerList;
 +
 +/**
 + * Called when a projectile is about to hit an entity.
 + */
 +public class ProjectilePreHitEntityEvent extends ProjectilePreHitEvent {
++    private static final HandlerList handlers = new HandlerList();
 +
 +    private final Entity hitEntity;
 +
@@ -123,6 +135,15 @@ index 00000000..c04ad72a
 +     */
 +    public Entity getHitEntity() {
 +        return hitEntity;
++    }
++
++    @Override
++    public HandlerList getHandlers() {
++        return handlers;
++    }
++
++    public static HandlerList getHandlerList() {
++        return handlers;
 +    }
 +}
 diff --git a/src/main/java/dev/rocco/kig/paper/api/event/ProjectilePreHitEvent.java b/src/main/java/dev/rocco/kig/paper/api/event/ProjectilePreHitEvent.java
@@ -192,5 +213,5 @@ index 00000000..4726a60e
 +    }
 +}
 -- 
-2.51.0.windows.1
+2.52.0
 
