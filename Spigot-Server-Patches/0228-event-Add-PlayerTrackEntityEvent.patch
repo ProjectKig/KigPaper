@@ -1,0 +1,53 @@
+From 11a91afb519a719ae3f508b0e40099cd76e40636 Mon Sep 17 00:00:00 2001
+From: Archer <archer@beezig.eu>
+Date: Thu, 3 Feb 2022 04:55:02 +0100
+Subject: [PATCH] event: Add PlayerTrackEntityEvent
+
+This commit adds an event that gets fired whenever an entity is added to
+a player's entity tracker. Cancelling this event prevents the entity
+from being added, and consequently, the entity is never sent (nor
+updated) for the player. While this is essentially the same method that
+Bukkit's hidden player system uses, simply cancelling the event does
+not make sure that the entity is not interacted with, and the player can
+still see them in some places (e.g. in the player list and the
+scoreboard).
+
+diff --git a/src/main/java/net/minecraft/server/EntityTrackerEntry.java b/src/main/java/net/minecraft/server/EntityTrackerEntry.java
+index 216f03972..369307970 100644
+--- a/src/main/java/net/minecraft/server/EntityTrackerEntry.java
++++ b/src/main/java/net/minecraft/server/EntityTrackerEntry.java
+@@ -1,16 +1,17 @@
+ package net.minecraft.server;
+ 
+-import com.google.common.collect.Sets;
+ import java.util.Collection;
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Set;
+ 
++import dev.rocco.kig.paper.api.event.PlayerTrackEntityEvent;
+ import dev.rocco.kig.paper.impl.cheetah.SinkEntityPlayer;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+ // CraftBukkit start
++import org.bukkit.Bukkit; // KigPaper
+ import org.bukkit.entity.Player;
+ import org.bukkit.event.player.PlayerVelocityEvent;
+ // CraftBukkit end
+@@ -340,6 +341,12 @@ public class EntityTrackerEntry {
+         if (entityplayer != this.tracker) {
+             if (this.c(entityplayer)) {
+                 if (!this.trackedPlayers.contains(entityplayer) && (this.e(entityplayer) || this.tracker.attachedToPlayer)) {
++                    // KigPaper start
++                    PlayerTrackEntityEvent event = new PlayerTrackEntityEvent(entityplayer.getBukkitEntity(), tracker.bukkitEntity);
++                    Bukkit.getServer().getPluginManager().callEvent(event);
++                    if (event.isCancelled()) return;
++                    // KigPaper end
++
+                     // CraftBukkit start - respect vanish API
+                     if (this.tracker instanceof EntityPlayer) {
+                         Player player = ((EntityPlayer) this.tracker).getBukkitEntity();
+-- 
+2.35.1
+

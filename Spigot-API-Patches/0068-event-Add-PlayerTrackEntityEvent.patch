@@ -1,0 +1,94 @@
+From c8c2aa31661e8b65a2a512eadf8a56d50ce01bc1 Mon Sep 17 00:00:00 2001
+From: Archer <archer@beezig.eu>
+Date: Thu, 3 Feb 2022 04:55:02 +0100
+Subject: [PATCH] event: Add PlayerTrackEntityEvent
+
+This commit adds an event that gets fired whenever an entity is added to
+a player's entity tracker. Cancelling this event prevents the entity
+from being added, and consequently, the entity is never sent (nor
+updated) for the player. While this is essentially the same method that
+Bukkit's hidden player system uses, simply cancelling the event does
+not make sure that the entity is not interacted with, and the player can
+still see them in some places (e.g. in the player list and the
+scoreboard).
+
+diff --git a/src/main/java/dev/rocco/kig/paper/api/event/PlayerTrackEntityEvent.java b/src/main/java/dev/rocco/kig/paper/api/event/PlayerTrackEntityEvent.java
+new file mode 100644
+index 00000000..848ffcae
+--- /dev/null
++++ b/src/main/java/dev/rocco/kig/paper/api/event/PlayerTrackEntityEvent.java
+@@ -0,0 +1,71 @@
++package dev.rocco.kig.paper.api.event;
++
++import org.bukkit.entity.Entity;
++import org.bukkit.entity.Player;
++import org.bukkit.event.Cancellable;
++import org.bukkit.event.HandlerList;
++import org.bukkit.event.player.PlayerEvent;
++
++/**
++ * Fired when an {@link Entity} is added to a {@link Player}'s entity tracker.
++ * Cancelling the event will prevent the given entity from entering the player's
++ * entity tracker.
++ */
++public class PlayerTrackEntityEvent extends PlayerEvent implements Cancellable {
++    private static final HandlerList handlers = new HandlerList();
++
++    private final Entity tracked;
++    private boolean cancelled;
++
++    /**
++     * Creates a new {@code PlayerTrackEntityEvent} for the given player and tracked entity.
++     *
++     * @param player  the player who the entity is added for
++     * @param tracked the entity that is to be added to the player's entity tracker
++     */
++    public PlayerTrackEntityEvent(Player player, Entity tracked) {
++        super(player);
++        this.tracked = tracked;
++    }
++
++    /**
++     * Returns the list of handlers that handle a {@code PlayerTrackEntityEvent}.
++     */
++    public static HandlerList getHandlerList() {
++        return handlers;
++    }
++
++    /**
++     * Returns the list of handlers that handle a {@code PlayerTrackEntityEvent}.
++     */
++    @Override
++    public HandlerList getHandlers() {
++        return handlers;
++    }
++
++    /**
++     * Returns the entity that is to be tracked in the player's tracker
++     */
++    public Entity getTracked() {
++        return tracked;
++    }
++
++    /**
++     * Returns whether this event is cancelled.
++     */
++    @Override
++    public boolean isCancelled() {
++        return cancelled;
++    }
++
++    /**
++     * Sets the cancelled status of this event. Cancelling the event will prevent the entity from being added to the
++     * player's entity tracker.
++     *
++     * @param cancel true if you wish to cancel this event
++     */
++    @Override
++    public void setCancelled(boolean cancel) {
++        this.cancelled = cancel;
++    }
++}
+-- 
+2.35.1
+
