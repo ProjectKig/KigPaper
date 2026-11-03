@@ -1,0 +1,61 @@
+From 9fa12c285856afbeebec0a96be83c587f65df390 Mon Sep 17 00:00:00 2001
+From: RoccoDev <hey@rocco.dev>
+Date: Tue, 3 Nov 2026 10:30:37 +0100
+Subject: [PATCH] Set team colors using prefix
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftTeam.java b/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftTeam.java
+index f5ff0f71..35daffdf 100644
+--- a/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftTeam.java
++++ b/src/main/java/org/bukkit/craftbukkit/scoreboard/CraftTeam.java
+@@ -2,10 +2,13 @@ package org.bukkit.craftbukkit.scoreboard;
+ 
+ import java.util.Set;
+ 
++import net.minecraft.server.EnumChatFormat;
+ import net.minecraft.server.ScoreboardTeamBase.EnumNameTagVisibility;
+ import org.apache.commons.lang.Validate;
+ import org.bukkit.Bukkit;
++import org.bukkit.ChatColor;
+ import org.bukkit.OfflinePlayer;
++import org.bukkit.craftbukkit.util.CraftChatMessage;
+ import org.bukkit.scoreboard.NameTagVisibility;
+ import org.bukkit.scoreboard.Team;
+ 
+@@ -52,6 +55,18 @@ final class CraftTeam extends CraftScoreboardComponent implements Team {
+         Validate.isTrue(prefix.length() <= 32, "Prefix '" + prefix + "' is longer than the limit of 32 characters");
+         CraftScoreboard scoreboard = checkState();
+ 
++        // KigPaper start - set team color
++        team.a(EnumChatFormat.RESET);
++        String lastColors = ChatColor.getLastColors(prefix);
++        if (lastColors.length() > 1) {
++            EnumChatFormat color = CraftChatMessage.StringMessage.formatMap.get(lastColors.charAt(1));
++            if (color != null) {
++                team.a(color);
++            }
++        }
++        // set before prefix because setPrefix broadcasts changes to clients
++        // KigPaper end
++
+         team.setPrefix(prefix);
+     }
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/CraftChatMessage.java b/src/main/java/org/bukkit/craftbukkit/util/CraftChatMessage.java
+index d941fba0..f08d3a90 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/CraftChatMessage.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/CraftChatMessage.java
+@@ -20,8 +20,8 @@ import net.minecraft.server.ChatMessage;
+ public final class CraftChatMessage {
+     
+     private static final Pattern LINK_PATTERN = Pattern.compile("((?:(?:https?):\\/\\/)?(?:[-\\w_\\.]{2,}\\.[a-z]{2,4}.*?(?=[\\.\\?!,;:]?(?:[" + String.valueOf(org.bukkit.ChatColor.COLOR_CHAR) + " \\n]|$))))");
+-    private static class StringMessage {
+-        private static final Map<Character, EnumChatFormat> formatMap;
++    public static class StringMessage {
++        public static final Map<Character, EnumChatFormat> formatMap;
+         //private static final Pattern INCREMENTAL_PATTERN = Pattern.compile("(" + String.valueOf(org.bukkit.ChatColor.COLOR_CHAR) + "[0-9a-fk-or])|(\\n)|((?:(?:https?):\\/\\/)?(?:[-\\w_\\.]{2,}\\.[a-z]{2,4}.*?(?=[\\.\\?!,;:]?(?:[" + String.valueOf(org.bukkit.ChatColor.COLOR_CHAR) + " \\n]|$))))", Pattern.CASE_INSENSITIVE);
+         private static final Pattern INCREMENTAL_PATTERN = Pattern.compile("(§[0-9a-fk-or])|(\\n)|(https?://[^\\s/$.?#].[^\\s§]*)", Pattern.CASE_INSENSITIVE); // KigPaper - better regex
+         static {
+-- 
+2.56.0
+
